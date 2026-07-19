@@ -173,17 +173,34 @@ public class ProfileFragment extends BaseFragment {
     protected void initListeners() {
         if (getView() == null) return;
 
-        getView().findViewById(R.id.btnGoToAuth).setOnClickListener(v -> startActivity(new Intent(getActivity(), AuthActivity.class)));
-        getView().findViewById(R.id.btnUploadCV).setOnClickListener(v -> cvPickerLauncher.launch("*/*"));
-        getView().findViewById(R.id.btnEditProfile).setOnClickListener(v -> startActivity(new Intent(getActivity(), EditProfileActivity.class)));
-        getView().findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
         getView().findViewById(R.id.ivAddSkill).setOnClickListener(v -> {
-            EditText input = new EditText(getContext());
-            new AlertDialog.Builder(getContext()).setTitle("Thêm kỹ năng").setView(input)
-                    .setPositiveButton("Thêm", (d, w) -> {
-                        String s = input.getText().toString().trim();
-                        if (!s.isEmpty()) addSkill(s);
-                    }).setNegativeButton("Hủy", null).show();
+
+            String[] skillList = {
+                    "Java",
+                    "Android",
+                    "Firebase",
+                    "Git",
+                    "SQL",
+                    "Kotlin",
+                    "UI/UX",
+                    "Figma",
+                    "HTML",
+                    "CSS",
+                    "JavaScript",
+                    "PHP",
+                    "Laravel",
+                    "ReactJS",
+                    "NodeJS",
+                    "Python"
+            };
+
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Chọn kỹ năng")
+                    .setItems(skillList, (dialog, which) -> {
+                        addSkill(skillList[which]);
+                    })
+                    .show();
+
         });
 
         getView().findViewById(R.id.cardPostJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), PostJobActivity.class)));
