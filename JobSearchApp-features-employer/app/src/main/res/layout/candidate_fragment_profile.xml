@@ -272,7 +272,9 @@
                         android:background="@drawable/bg_search_bar"
                         android:padding="12dp"
                         android:gravity="center_vertical"
-                        android:visibility="gone">
+                        android:clickable="true"
+                        android:focusable="true">
+
                         <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/ic_menu_edit" app:tint="#E53935"/>
                         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
                             <TextView android:id="@+id/tvCvName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Chưa có CV" android:textStyle="bold" android:textSize="13sp"/>

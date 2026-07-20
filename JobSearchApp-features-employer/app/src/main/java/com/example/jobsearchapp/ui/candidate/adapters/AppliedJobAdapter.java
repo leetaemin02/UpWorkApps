@@ -1,7 +1,5 @@
 package com.example.jobsearchapp.ui.candidate.adapters;
 
-import android.content.Intent;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,23 +7,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.jobsearchapp.R;
-import com.example.jobsearchapp.data.models.ApplicationWithJob;
-import com.example.jobsearchapp.ui.activities.JobDetailActivity;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.example.jobsearchapp.data.models.Application;
 import java.util.List;
-import java.util.Locale;
 
 public class AppliedJobAdapter extends RecyclerView.Adapter<AppliedJobAdapter.ViewHolder> {
 
-    private List<ApplicationWithJob> list;
+    private List<Application> applicationList;
 
-    public AppliedJobAdapter(List<ApplicationWithJob> list) {
-        this.list = list;
+    public AppliedJobAdapter(List<Application> applicationList) {
+        this.applicationList = applicationList;
     }
 
-    public void setData(List<ApplicationWithJob> newList) {
-        this.list = newList;
+    public void setData(List<Application> list) {
+        this.applicationList = list;
         notifyDataSetChanged();
     }
 
@@ -38,54 +32,30 @@ public class AppliedJobAdapter extends RecyclerView.Adapter<AppliedJobAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ApplicationWithJob item = list.get(position);
-        if (item.job != null) {
-            holder.tvJobTitle.setText(item.job.getTitle());
-            holder.tvCompanyInfo.setText(item.job.getCompanyName() + " • " + item.job.getLocation());
+        Application app = applicationList.get(position);
+        holder.tvJobTitle.setText(app.getJobTitle() != null ? app.getJobTitle() : "Chức vụ không xác định");
+
+        String status = app.getStatus();
+        if ("pending".equalsIgnoreCase(status)) {
+            holder.tvStatus.setText("Đang xem xét");
+        } else {
+            holder.tvStatus.setText(status != null ? status : "Đang chờ");
         }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        holder.tvAppliedDate.setText("Đã nộp: " + sdf.format(new Date(item.application.getAppliedAt())));
-
-        String status = item.application.getStatus();
-        holder.tvStatusBadge.setText(status);
-
-        // Đổi màu badge theo trạng thái
-        switch (status) {
-            case "Đang xem xét":
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#0D6EFD"));
-                break;
-            case "Phỏng vấn":
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#198754"));
-                break;
-            case "Từ chối":
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#DC3545"));
-                break;
-        }
-
-        // Xử lý sự kiện click để xem chi tiết
-        holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), JobDetailActivity.class);
-            intent.putExtra("JOB_DATA", item.job);
-            intent.putExtra("APP_STATUS", status); // Truyền thêm trạng thái
-            v.getContext().startActivity(intent);
-        });
     }
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return applicationList != null ? applicationList.size() : 0;
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvJobTitle, tvCompanyInfo, tvAppliedDate, tvStatusBadge;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvJobTitle, tvStatus;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+
             tvJobTitle = itemView.findViewById(R.id.tvJobTitle);
-            tvCompanyInfo = itemView.findViewById(R.id.tvCompanyInfo);
-            tvAppliedDate = itemView.findViewById(R.id.tvAppliedDate);
-            tvStatusBadge = itemView.findViewById(R.id.tvStatusBadge);
+            tvStatus = itemView.findViewById(R.id.tvStatusBadge);
         }
     }
 }

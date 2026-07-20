@@ -4,12 +4,14 @@ import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.jobsearchapp.R;
-import com.example.jobsearchapp.data.local.AppDatabase;
-import com.example.jobsearchapp.data.models.ApplicationWithJob;
+import com.example.jobsearchapp.data.models.Application;
 import com.example.jobsearchapp.ui.base.BaseFragment;
 import com.example.jobsearchapp.ui.candidate.adapters.AppliedJobAdapter;
 import com.example.jobsearchapp.utils.SessionManager;
 import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,8 @@ public class AppliedJobsFragment extends BaseFragment {
     private AppliedJobAdapter adapter;
     private TabLayout tabLayout;
     private SessionManager sessionManager;
-    private List<ApplicationWithJob> allApplications = new ArrayList<>();
+    private FirebaseFirestore db;
+    private List<Application> allApplications = new ArrayList<>();
 
     @Override
     protected int getLayoutId() {
@@ -31,48 +34,77 @@ public class AppliedJobsFragment extends BaseFragment {
         rvAppliedJobs = view.findViewById(R.id.rvAppliedJobs);
         tabLayout = view.findViewById(R.id.tabLayout);
         sessionManager = new SessionManager(getContext());
+        db = FirebaseFirestore.getInstance();
 
         adapter = new AppliedJobAdapter(new ArrayList<>());
         rvAppliedJobs.setLayoutManager(new LinearLayoutManager(getContext()));
         rvAppliedJobs.setAdapter(adapter);
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
         loadApplications();
     }
 
     private void loadApplications() {
         String userId = sessionManager.getUserId();
-        if (!userId.isEmpty()) {
-            allApplications = AppDatabase.getInstance(getContext()).applicationDao().getMyApplicationsWithJob(userId);
-            adapter.setData(allApplications);
-        } else {
+        if (userId == null || userId.isEmpty()) {
             showToast("Vui lòng đăng nhập để xem đơn ứng tuyển");
+            return;
         }
+
+        db.collection("applications")
+                .whereEqualTo("candidateId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    allApplications.clear();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        Application app = doc.toObject(Application.class);
+                        app.setId(doc.getId());
+                        allApplications.add(app);
+                    }
+                    adapter.setData(allApplications);
+                })
+                .addOnFailureListener(e -> showToast("Lỗi tải đơn: " + e.getMessage()));
     }
 
     @Override
     protected void initListeners() {
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                filterByStatus(tab.getText().toString());
-            }
+        if (tabLayout != null) {
+            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    if (tab.getText() != null) {
+                        filterByStatus(tab.getText().toString());
+                    }
+                }
 
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {}
 
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
-        });
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {}
+            });
+        }
     }
 
-    private void filterByStatus(String status) {
-        if (status.equals("Tất cả")) {
+    private void filterByStatus(String statusTab) {
+        if (statusTab.equals("Tất cả")) {
             adapter.setData(allApplications);
         } else {
-            List<ApplicationWithJob> filteredList = new ArrayList<>();
-            for (ApplicationWithJob item : allApplications) {
-                if (item.application.getStatus().equals(status)) {
-                    filteredList.add(item);
+            List<Application> filteredList = new ArrayList<>();
+            for (Application item : allApplications) {
+                String dbStatus = item.getStatus();
+                if (dbStatus != null) {
+
+                    if (statusTab.equals("Đang xem xét") && (dbStatus.equalsIgnoreCase("pending") || dbStatus.equalsIgnoreCase("Đang xem xét"))) {
+                        filteredList.add(item);
+                    } else if (statusTab.equals("Phỏng vấn") && (dbStatus.equalsIgnoreCase("Accepted") || dbStatus.equalsIgnoreCase("Phỏng vấn"))) {
+                        filteredList.add(item);
+                    } else if (statusTab.equals("Từ chối") && (dbStatus.equalsIgnoreCase("Rejected") || dbStatus.equalsIgnoreCase("Từ chối"))) {
+                        filteredList.add(item);
+                    }
                 }
             }
             adapter.setData(filteredList);

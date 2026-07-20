@@ -69,18 +69,42 @@ public class JobDetailActivity extends BaseActivity {
 
                 if (job == null) return;
 
-                // Tạo đơn ứng tuyển mới
-                Application app = new Application(job.getId(), userId, job.getCompanyId());
-                app.setJobTitle(job.getTitle());
-                app.setStatus("pending");
+                // Lấy thêm tên của ứng viên từ Firestore để đồng bộ hiển thị sang tab Apps bên Candidate
+                db.collection("users").document(userId).get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            String candidateName = "Người ứng tuyển";
+                            if (documentSnapshot.exists() && documentSnapshot.getString("fullName") != null) {
+                                candidateName = documentSnapshot.getString("fullName");
+                            }
 
-                db.collection("applications")
-                    .add(app)
-                    .addOnSuccessListener(documentReference -> {
-                        showToast("Đã gửi yêu cầu ứng tuyển cho: " + job.getTitle());
-                        finish();
-                    })
-                    .addOnFailureListener(e -> showToast("Lỗi ứng tuyển: " + e.getMessage()));
+                            // Tạo đơn ứng tuyển mới và gán đầy đủ thông tin (dùng currentTimeMillis cho long)
+                            Application app = new Application(job.getId(), userId, job.getCompanyId());
+                            app.setJobTitle(job.getTitle());
+                            app.setCandidateName(candidateName);
+                            app.setStatus("pending");
+                            app.setAppliedAt(System.currentTimeMillis());
+
+                            db.collection("applications")
+                                    .add(app)
+                                    .addOnSuccessListener(documentReference -> {
+                                        showToast("Đã gửi yêu cầu ứng tuyển thành công!");
+                                        finish();
+                                    })
+                                    .addOnFailureListener(e -> showToast("Lỗi ứng tuyển: " + e.getMessage()));
+                        })
+                        .addOnFailureListener(e -> {
+                            // Nếu lỗi mạng, vẫn cố gắng gửi đơn với tên mặc định
+                            Application app = new Application(job.getId(), userId, job.getCompanyId());
+                            app.setJobTitle(job.getTitle());
+                            app.setStatus("pending");
+                            app.setAppliedAt(System.currentTimeMillis());
+
+                            db.collection("applications").add(app)
+                                    .addOnSuccessListener(ref -> {
+                                        showToast("Đã gửi yêu cầu ứng tuyển thành công!");
+                                        finish();
+                                    });
+                        });
             });
         }
 

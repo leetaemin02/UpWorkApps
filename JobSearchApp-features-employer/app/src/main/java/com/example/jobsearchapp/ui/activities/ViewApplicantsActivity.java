@@ -13,6 +13,7 @@ import com.example.jobsearchapp.ui.employer.adapters.ApplicantAdapter;
 import com.example.jobsearchapp.utils.SessionManager;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,53 +50,94 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
 
     private void loadApplicants() {
         String employerId = sessionManager.getUserId();
-        if (!employerId.isEmpty()) {
-            db.collection("applications")
+        Log.d("DEBUG_DATA", "Đang load cho employerId: " + employerId);
+
+        if (employerId == null || employerId.isEmpty()) {
+            Log.d("DEBUG_DATA", "EmployerID trống!");
+            return;
+        }
+
+        // Bước 1: Lấy tất cả các job do employer này đăng
+        db.collection("jobs")
                 .whereEqualTo("employerId", employerId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Applicant> applicants = new ArrayList<>();
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        adapter.updateList(applicants);
+                .addOnSuccessListener(jobSnapshots -> {
+                    if (jobSnapshots.isEmpty()) {
+                        Log.d("DEBUG_DATA", "Nhà tuyển dụng này chưa đăng job nào.");
+                        adapter.updateList(new ArrayList<>());
                         return;
                     }
 
-                    AtomicInteger counter = new AtomicInteger(0);
-                    int total = queryDocumentSnapshots.size();
-
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Application app = doc.toObject(Application.class);
-                        app.setId(doc.getId());
-
-                        // Fetch User and Job details for each application
-                        db.collection("users").document(app.getCandidateId()).get()
-                            .addOnSuccessListener(userDoc -> {
-                                User user = userDoc.toObject(User.class);
-                                db.collection("jobs").document(app.getJobId()).get()
-                                    .addOnSuccessListener(jobDoc -> {
-                                        Job job = jobDoc.toObject(Job.class);
-                                        
-                                        if (user != null) {
-                                            Applicant applicant = new Applicant();
-                                            applicant.setApplicationId(app.getId());
-                                            applicant.setId(userDoc.getId());
-                                            applicant.setName(user.getFullName());
-                                            applicant.setEmail(user.getEmail());
-                                            applicant.setJobTitle(job != null ? job.getTitle() : "N/A");
-                                            applicant.setStatus(app.getStatus());
-                                            applicants.add(applicant);
-                                        }
-
-                                        if (counter.incrementAndGet() == total) {
-                                            applicantList = applicants;
-                                            adapter.updateList(applicantList);
-                                        }
-                                    });
-                            });
+                    List<String> jobIds = new ArrayList<>();
+                    for (QueryDocumentSnapshot jobDoc : jobSnapshots) {
+                        jobIds.add(jobDoc.getId());
                     }
+
+                    // Bước 2: Lấy tất cả applications có jobId nằm trong danh sách các job trên
+                    List<String> subJobIds = jobIds.size() > 10 ? jobIds.subList(0, 10) : jobIds;
+
+                    db.collection("applications")
+                            .whereIn("jobId", subJobIds)
+                            .get()
+                            .addOnSuccessListener(queryDocumentSnapshots -> {
+                                Log.d("DEBUG_DATA", "Tìm thấy: " + queryDocumentSnapshots.size() + " đơn");
+
+                                if (queryDocumentSnapshots.isEmpty()) {
+                                    adapter.updateList(new ArrayList<>());
+                                    return;
+                                }
+
+                                List<Applicant> applicants = new ArrayList<>();
+                                AtomicInteger counter = new AtomicInteger(0);
+                                int total = queryDocumentSnapshots.size();
+
+                                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                                    Application app = doc.toObject(Application.class);
+                                    app.setId(doc.getId());
+
+                                    db.collection("users").document(app.getCandidateId()).get()
+                                            .addOnSuccessListener(userDoc -> {
+                                                User user = userDoc.toObject(User.class);
+                                                db.collection("jobs").document(app.getJobId()).get()
+                                                        .addOnSuccessListener(jobDoc -> {
+                                                            Job job = jobDoc.toObject(Job.class);
+
+                                                            if (user != null) {
+                                                                Applicant applicant = new Applicant();
+                                                                applicant.setApplicationId(app.getId());
+                                                                applicant.setId(userDoc.getId());
+                                                                applicant.setName(user.getFullName());
+                                                                applicant.setEmail(user.getEmail());
+                                                                applicant.setJobTitle(job != null ? job.getTitle() : "N/A");
+                                                                applicant.setStatus(app.getStatus());
+                                                                applicants.add(applicant);
+                                                            }
+
+                                                            if (counter.incrementAndGet() == total) {
+                                                                runOnUiThread(() -> adapter.updateList(applicants));
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            if (counter.incrementAndGet() == total) {
+                                                                runOnUiThread(() -> adapter.updateList(applicants));
+                                                            }
+                                                        });
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                if (counter.incrementAndGet() == total) {
+                                                    runOnUiThread(() -> adapter.updateList(applicants));
+                                                }
+                                            });
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("DEBUG_DATA", "Lỗi lấy applications: " + e.getMessage());
+                            });
                 })
-                .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
-        }
+                .addOnFailureListener(e -> {
+                    Log.e("DEBUG_DATA", "Lỗi lấy jobs: " + e.getMessage());
+                    showToast("Lỗi: " + e.getMessage());
+                });
     }
 
     @Override
@@ -115,11 +157,11 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
 
     private void updateApplicationStatus(String applicationId, String status) {
         db.collection("applications").document(applicationId)
-            .update("status", status)
-            .addOnSuccessListener(aVoid -> {
-                showToast("Đã " + (status.equals("Accepted") ? "chấp nhận" : "từ chối") + " đơn ứng tuyển");
-                loadApplicants();
-            })
-            .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
+                .update("status", status)
+                .addOnSuccessListener(aVoid -> {
+                    showToast("Đã " + (status.equals("Accepted") ? "chấp nhận" : "từ chối") + " đơn ứng tuyển");
+                    loadApplicants();
+                })
+                .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
     }
 }

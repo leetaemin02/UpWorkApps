@@ -12,6 +12,10 @@ import com.example.jobsearchapp.ui.candidate.fragments.ProfileFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.SearchFragment;
 import com.example.jobsearchapp.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends BaseActivity {
 
@@ -39,6 +43,9 @@ public class MainActivity extends BaseActivity {
         if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
             replaceFragment(new HomeFragment());
         }
+
+        // GỌI HÀM TỰ ĐỘNG BƠM DỮ LIỆU LÊN FIREBASE NGAY KHI MAIN KHỞI TẠO
+        autoPushMockDataToFirebase();
     }
 
     @Override
@@ -91,5 +98,42 @@ public class MainActivity extends BaseActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
+    }
+
+    // --- HÀM TỰ ĐỘNG BƠM DỮ LIỆU MẪU LÊN FIRESTORE ---
+    private void autoPushMockDataToFirebase() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String employerId = "employer_test_id";
+
+        Map<String, Object> job = new HashMap<>();
+        job.put("title", "Lập trình viên Android Junior");
+        job.put("companyId", employerId);
+        job.put("companyName", "Công ty TechCorp");
+        job.put("location", "Hồ Chí Minh");
+        job.put("salaryMin", 8000000L);
+        job.put("salaryMax", 15000000L);
+        job.put("description", "Phát triển ứng dụng Android sử dụng Java và Firestore.");
+        job.put("createdAt", com.google.firebase.Timestamp.now());
+
+        db.collection("jobs").add(job)
+                .addOnSuccessListener(documentReference -> {
+                    String jobId = documentReference.getId();
+
+                    Map<String, Object> app = new HashMap<>();
+                    app.put("jobId", jobId);
+                    app.put("jobTitle", "Lập trình viên Android Junior");
+                    app.put("candidateId", "candidate_123");
+                    app.put("candidateName", "Nguyễn Văn An");
+                    app.put("employerId", employerId);
+                    app.put("status", "pending");
+                    app.put("appliedAt", com.google.firebase.Timestamp.now());
+
+                    db.collection("applications").add(app);
+
+                    showToast("Đã tự động bơm dữ liệu mẫu lên Firebase thành công!");
+                })
+                .addOnFailureListener(e -> {
+                    // In ra thông báo nếu kết nối bị lỗi
+                });
     }
 }
