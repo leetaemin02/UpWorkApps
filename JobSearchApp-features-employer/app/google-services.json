@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "434325170661",
-    "project_id": "job-search-app-13754",
-    "storage_bucket": "job-search-app-13754.firebasestorage.app"
+    "project_number": "71216745961",
+    "project_id": "jobsearchapp-b9af3",
+    "storage_bucket": "jobsearchapp-b9af3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:434325170661:android:d63ab35145a758e34c270c",
+        "mobilesdk_app_id": "1:71216745961:android:45d3a8301ccae25a9d8f78",
         "android_client_info": {
           "package_name": "com.example.jobsearchapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBOns7EdUfoBCLHfhJMYDarOWEUociq7Gw"
+          "current_key": "AIzaSyB-26JpHeY0j3lXZnEv1uoHztSkK1mUzt0"
         }
       ],
       "services": {

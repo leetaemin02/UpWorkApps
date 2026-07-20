@@ -3,12 +3,13 @@ package com.example.jobsearchapp.ui.candidate.fragments;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.activities.AuthActivity;
@@ -17,6 +18,7 @@ import com.example.jobsearchapp.ui.activities.ManageJobsActivity;
 import com.example.jobsearchapp.ui.activities.PostJobActivity;
 import com.example.jobsearchapp.ui.activities.ViewApplicantsActivity;
 import com.example.jobsearchapp.ui.base.BaseFragment;
+import com.example.jobsearchapp.utils.FirebaseStorageHelper;
 import com.example.jobsearchapp.utils.SessionManager;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -35,11 +37,15 @@ public class ProfileFragment extends BaseFragment {
 
     private final ActivityResultLauncher<String> cvPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
-            uri -> { if (uri != null) handleSelectedCV(uri); }
+            uri -> {
+                if (uri != null) handleSelectedCV(uri);
+            }
     );
 
     @Override
-    protected int getLayoutId() { return R.layout.candidate_fragment_profile; }
+    protected int getLayoutId() {
+        return R.layout.candidate_fragment_profile;
+    }
 
     @Override
     protected void initViews(View view) {
@@ -57,7 +63,7 @@ public class ProfileFragment extends BaseFragment {
         tvEmployerWelcome = view.findViewById(R.id.tvEmployerWelcome);
 
         db = FirebaseFirestore.getInstance();
-        sessionManager = new SessionManager(getContext());
+        sessionManager = new SessionManager(requireContext());
     }
 
     @Override
@@ -82,23 +88,35 @@ public class ProfileFragment extends BaseFragment {
 
     private void loadUserData(String userId, String role) {
         db.collection("users").document(userId).get()
-            .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    currentUser = documentSnapshot.toObject(User.class);
-                    if (currentUser != null) {
-                        currentUser.setId(documentSnapshot.getId());
-                        if ("employer".equalsIgnoreCase(role)) {
-                            layoutLoggedIn.setVisibility(View.GONE);
-                            layoutEmployerDashboard.setVisibility(View.VISIBLE);
-                            tvEmployerWelcome.setText("Chào, " + currentUser.getFullName() + "!");
-                        } else {
-                            layoutLoggedIn.setVisibility(View.VISIBLE);
-                            layoutEmployerDashboard.setVisibility(View.GONE);
-                            displayCandidateData();
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        currentUser = documentSnapshot.toObject(User.class);
+                        if (currentUser != null) {
+                            currentUser.setId(documentSnapshot.getId());
+                            if ("employer".equalsIgnoreCase(role)) {
+                                layoutLoggedIn.setVisibility(View.GONE);
+                                layoutEmployerDashboard.setVisibility(View.VISIBLE);
+                                layoutGuest.setVisibility(View.GONE); // Đảm bảo ẩn layout khách
+                                tvEmployerWelcome.setText("Chào, " + currentUser.getFullName() + "!");
+                            } else {
+                                layoutLoggedIn.setVisibility(View.VISIBLE);
+                                layoutEmployerDashboard.setVisibility(View.GONE);
+                                layoutGuest.setVisibility(View.GONE); // Đảm bảo ẩn layout khách
+                                displayCandidateData();
+                            }
                         }
+                    } else {
+                        // Nếu không có dữ liệu trên Firestore (lỗi sync), hiện giao diện khách để họ đăng nhập lại
+                        layoutGuest.setVisibility(View.VISIBLE);
+                        layoutLoggedIn.setVisibility(View.GONE);
+                        layoutEmployerDashboard.setVisibility(View.GONE);
                     }
-                }
-            });
+                })
+                .addOnFailureListener(e -> {
+                    // Nếu lỗi kết nối (không có Internet), cũng hiện giao diện khách
+                    layoutGuest.setVisibility(View.VISIBLE);
+                    showToast("Lỗi kết nối: " + e.getMessage());
+                });
     }
 
     private void displayCandidateData() {
@@ -121,7 +139,7 @@ public class ProfileFragment extends BaseFragment {
         if (skillsStr != null && !skillsStr.isEmpty()) {
             for (String skill : skillsStr.split(",")) {
                 if (skill.trim().isEmpty()) continue;
-                Chip chip = new Chip(getContext());
+                Chip chip = new Chip(requireContext());
                 chip.setText(skill.trim());
                 chip.setCloseIconVisible(true);
                 chip.setOnCloseIconClickListener(v -> removeSkill(skill.trim()));
@@ -132,27 +150,41 @@ public class ProfileFragment extends BaseFragment {
 
     private void handleSelectedCV(Uri uri) {
         if (currentUser == null) return;
-        String fileName = uri.getLastPathSegment();
-        
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("cvPath", fileName);
-        
-        db.collection("users").document(currentUser.getId())
-            .update(updates)
-            .addOnSuccessListener(aVoid -> {
-                showToast("Đã cập nhật CV thành công");
-                loadUserData(currentUser.getId(), sessionManager.getRole());
-            });
+
+        FirebaseStorageHelper storageHelper = new FirebaseStorageHelper();
+        storageHelper.uploadCV(uri, currentUser.getId(),
+                new FirebaseStorageHelper.UploadCallback() {
+                    @Override
+                    public void onSuccess(String downloadUrl) {
+                        String fileName = uri.getLastPathSegment();
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("cvPath", fileName);
+                        updates.put("cvUrl", downloadUrl);
+
+                        db.collection("users")
+                                .document(currentUser.getId())
+                                .update(updates)
+                                .addOnSuccessListener(unused -> {
+                                    showToast("Tải CV thành công");
+                                    loadUserData(currentUser.getId(), sessionManager.getRole());
+                                });
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        showToast("Upload thất bại: " + e.getMessage());
+                    }
+                });
     }
 
     private void addSkill(String skill) {
         if (currentUser == null) return;
         String current = currentUser.getSkills();
         String updated = (current == null || current.isEmpty()) ? skill : current + "," + skill;
-        
+
         db.collection("users").document(currentUser.getId())
-            .update("skills", updated)
-            .addOnSuccessListener(aVoid -> loadUserData(currentUser.getId(), sessionManager.getRole()));
+                .update("skills", updated)
+                .addOnSuccessListener(aVoid -> loadUserData(currentUser.getId(), sessionManager.getRole()));
     }
 
     private void removeSkill(String skill) {
@@ -165,48 +197,53 @@ public class ProfileFragment extends BaseFragment {
             }
         }
         db.collection("users").document(currentUser.getId())
-            .update("skills", sb.toString())
-            .addOnSuccessListener(aVoid -> loadUserData(currentUser.getId(), sessionManager.getRole()));
+                .update("skills", sb.toString())
+                .addOnSuccessListener(aVoid -> loadUserData(currentUser.getId(), sessionManager.getRole()));
     }
 
     @Override
     protected void initListeners() {
         if (getView() == null) return;
 
-        getView().findViewById(R.id.ivAddSkill).setOnClickListener(v -> {
+        // Guest: Nút đăng nhập
+        getView().findViewById(R.id.btnGoToAuth).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), AuthActivity.class)));
 
-            String[] skillList = {
-                    "Java",
-                    "Android",
-                    "Firebase",
-                    "Git",
-                    "SQL",
-                    "Kotlin",
-                    "UI/UX",
-                    "Figma",
-                    "HTML",
-                    "CSS",
-                    "JavaScript",
-                    "PHP",
-                    "Laravel",
-                    "ReactJS",
-                    "NodeJS",
-                    "Python"
-            };
+        // Candidate: Nút tải CV, thêm kỹ năng, sửa profile, đăng xuất
+        getView().findViewById(R.id.btnUploadCV).setOnClickListener(v ->
+                cvPickerLauncher.launch("application/pdf"));
 
-            new AlertDialog.Builder(getContext())
-                    .setTitle("Chọn kỹ năng")
-                    .setItems(skillList, (dialog, which) -> {
-                        addSkill(skillList[which]);
-                    })
-                    .show();
+        getView().findViewById(R.id.ivAddSkill).setOnClickListener(v -> showSkillDialog());
 
-        });
+        getView().findViewById(R.id.btnEditProfile).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), EditProfileActivity.class)));
 
-        getView().findViewById(R.id.cardPostJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), PostJobActivity.class)));
-        getView().findViewById(R.id.cardManageJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), ManageJobsActivity.class)));
-        getView().findViewById(R.id.cardApplicants).setOnClickListener(v -> startActivity(new Intent(getActivity(), ViewApplicantsActivity.class)));
+        getView().findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
+
+        // Employer: Các nút quản lý của Nhà tuyển dụng
+        getView().findViewById(R.id.cardPostJob).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), PostJobActivity.class)));
+
+        getView().findViewById(R.id.cardManageJob).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), ManageJobsActivity.class)));
+
+        getView().findViewById(R.id.cardApplicants).setOnClickListener(v ->
+                startActivity(new Intent(getActivity(), ViewApplicantsActivity.class)));
+
         getView().findViewById(R.id.btnLogoutEmployer).setOnClickListener(v -> logout());
+    }
+
+    private void showSkillDialog() {
+        String[] skillList = {
+                "Java", "Android", "Firebase", "Git", "SQL", "Kotlin",
+                "UI/UX", "Figma", "HTML", "CSS", "JavaScript", "PHP",
+                "Laravel", "ReactJS", "NodeJS", "Python"
+        };
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Chọn kỹ năng")
+                .setItems(skillList, (dialog, which) -> addSkill(skillList[which]))
+                .show();
     }
 
     private void logout() {
