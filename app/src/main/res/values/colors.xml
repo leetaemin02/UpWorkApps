@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hệ màu chính -->
+    <color name="primary">#0D6EFD</color> <!-- Xanh dương chủ đạo -->
+    <color name="primary_light">#E7F1FF</color> <!-- Màu nền nhạt cho indicator -->
+    <color name="primary_dark">#0a58ca</color>
+
+    <!-- Màu nền và chữ -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="background_gray">#F8F9FA</color>
+    <color name="text_main">#212529</color>
+    <color name="text_sub">#6C757D</color>
+
+    <!-- Màu hỗ trợ -->
+    <color name="gray_light">#F1F3F5</color>
+    <color name="gray_border">#E0E0E0</color>
+    <color name="success">#198754</color>
+    <color name="error">#DC3545</color>
+    <color name="tag_bg">#F1F3F5</color>
+</resources>

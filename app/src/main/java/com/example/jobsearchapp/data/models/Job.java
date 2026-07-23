@@ -1,0 +1,127 @@
+package com.example.jobsearchapp.data.models;
+
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.annotation.NonNull;
+import java.io.Serializable;
+
+@Entity(tableName = "jobs")
+public class Job implements Serializable {
+    @PrimaryKey
+    @NonNull
+    private String id; // jobId
+    private String companyId;
+    private String employerId; // Thêm trường này để xác định chủ sở hữu bài đăng
+    private String title;
+    private String description;
+    private String requirements;
+    private String benefits;
+    private long salaryMin;
+    private long salaryMax;
+    private String location;
+    private String jobType; // "Full-time"/"Part-time"/"Remote"/"Internship"
+    private String category;
+    private String experienceRequired;
+    private long deadline; // Lưu trữ dạng timestamp nội bộ
+    private long postedAt;
+    private String status; // "active"/"closed"/"pending"
+    private int views;
+    private int quantity;
+    
+    // Denormalization fields for faster display
+    private String companyName;
+    private String logoUrl;
+
+    public Job() {
+        this.id = java.util.UUID.randomUUID().toString();
+        this.postedAt = System.currentTimeMillis();
+        this.status = "active";
+        this.views = 0;
+    }
+
+    // Getters and Setters
+    @NonNull
+    public String getId() { return id; }
+    public void setId(@NonNull String id) { this.id = id; }
+    public String getCompanyId() { return companyId; }
+    public void setCompanyId(String companyId) { this.companyId = companyId; }
+    public String getEmployerId() { return employerId; }
+    public void setEmployerId(String employerId) { this.employerId = employerId; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getRequirements() { return requirements; }
+    public void setRequirements(String requirements) { this.requirements = requirements; }
+    public String getBenefits() { return benefits; }
+    public void setBenefits(String benefits) { this.benefits = benefits; }
+    public long getSalaryMin() { return salaryMin; }
+    public void setSalaryMin(long salaryMin) { this.salaryMin = salaryMin; }
+    public long getSalaryMax() { return salaryMax; }
+    public void setSalaryMax(long salaryMax) { this.salaryMax = salaryMax; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    public String getJobType() { return jobType; }
+    public void setJobType(String jobType) { this.jobType = jobType; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public String getExperienceRequired() { return experienceRequired; }
+    public void setExperienceRequired(String experienceRequired) { this.experienceRequired = experienceRequired; }
+    public long getDeadline() { return deadline; }
+
+    // Xóa bỏ overload setDeadline(Object) gây crash Firestore
+    public void setDeadline(long deadline) { this.deadline = deadline; }
+    
+    // Đổi tên setter phụ để xử lý dữ liệu từ Firestore mà không trùng tên
+    public void setDeadlineFromObject(Object deadline) {
+        if (deadline instanceof Long) {
+            this.deadline = (Long) deadline;
+        } else if (deadline instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.deadline = sdf.parse((String) deadline).getTime();
+            } catch (Exception e) {
+                try {
+                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                    this.deadline = sdf2.parse((String) deadline).getTime();
+                } catch (Exception e2) {
+                    this.deadline = 0;
+                }
+            }
+        } else if (deadline instanceof Double) {
+            this.deadline = ((Double) deadline).longValue();
+        }
+    }
+    public long getPostedAt() { return postedAt; }
+    public void setPostedAt(long postedAt) { this.postedAt = postedAt; }
+
+    // Đổi tên setter phụ cho Firebase để tránh trùng overload
+    public void setPostedAtFromObject(Object postedAt) {
+        if (postedAt instanceof Long) {
+            this.postedAt = (Long) postedAt;
+        } else if (postedAt instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.postedAt = sdf.parse((String) postedAt).getTime();
+            } catch (Exception e) {
+                this.postedAt = System.currentTimeMillis();
+            }
+        } else if (postedAt instanceof Double) {
+            this.postedAt = ((Double) postedAt).longValue();
+        }
+    }
+    
+    // Alias cho Firestore
+    public void setCreatedAt(long createdAt) { this.postedAt = createdAt; }
+    public long getCreatedAt() { return postedAt; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public int getViews() { return views; }
+    public void setViews(int views) { this.views = views; }
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+}
