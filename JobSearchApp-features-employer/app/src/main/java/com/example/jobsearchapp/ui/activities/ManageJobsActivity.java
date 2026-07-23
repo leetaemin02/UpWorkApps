@@ -60,8 +60,24 @@ public class ManageJobsActivity extends BaseActivity implements ManageJobAdapter
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Job> jobs = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Job job = doc.toObject(Job.class);
+                        Job job = new Job();
                         job.setId(doc.getId());
+                        job.setTitle(doc.getString("title"));
+                        
+                        Long sMin = doc.getLong("salaryMin");
+                        job.setSalaryMin(sMin != null ? sMin : 0);
+                        
+                        Long sMax = doc.getLong("salaryMax");
+                        job.setSalaryMax(sMax != null ? sMax : 0);
+                        
+                        job.setLocation(doc.getString("location"));
+                        job.setDeadlineFromObject(doc.get("deadline"));
+                        job.setDescription(doc.getString("description"));
+                        job.setRequirements(doc.getString("requirements"));
+                        job.setBenefits(doc.getString("benefits"));
+                        job.setJobType(doc.getString("jobType"));
+                        job.setCategory(doc.getString("category"));
+
                         jobs.add(job);
                     }
                     jobList = jobs;

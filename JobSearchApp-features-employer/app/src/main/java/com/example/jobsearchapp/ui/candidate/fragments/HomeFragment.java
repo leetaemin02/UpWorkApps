@@ -100,8 +100,37 @@ public class HomeFragment extends BaseFragment {
                     java.util.Set<String> uniqueCategories = new java.util.HashSet<>();
                     
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Job job = doc.toObject(Job.class);
+                        // Trích xuất thủ công các trường quan trọng để tránh crash setter overload
+                        Job job = new Job();
                         job.setId(doc.getId());
+                        job.setCompanyId(doc.getString("companyId"));
+                        job.setEmployerId(doc.getString("employerId"));
+                        job.setTitle(doc.getString("title"));
+                        job.setDescription(doc.getString("description"));
+                        job.setRequirements(doc.getString("requirements"));
+                        job.setBenefits(doc.getString("benefits"));
+                        
+                        Long sMin = doc.getLong("salaryMin");
+                        job.setSalaryMin(sMin != null ? sMin : 0);
+                        
+                        Long sMax = doc.getLong("salaryMax");
+                        job.setSalaryMax(sMax != null ? sMax : 0);
+                        
+                        job.setLocation(doc.getString("location"));
+                        job.setJobType(doc.getString("jobType"));
+                        job.setCategory(doc.getString("category"));
+                        job.setExperienceRequired(doc.getString("experienceRequired"));
+                        job.setStatus(doc.getString("status"));
+                        
+                        Object deadlineObj = doc.get("deadline");
+                        job.setDeadlineFromObject(deadlineObj);
+                        
+                        Object postedAtObj = doc.get("postedAt");
+                        job.setPostedAtFromObject(postedAtObj);
+                        
+                        job.setCompanyName(doc.getString("companyName"));
+                        job.setLogoUrl(doc.getString("logoUrl"));
+
                         jobList.add(job);
                         
                         if (job.getCategory() != null && !job.getCategory().isEmpty()) {

@@ -78,7 +78,6 @@ public class DataSeedHelper {
         job.setJobType(type);
         job.setCategory(cat);
         job.setExperienceRequired(exp);
-        job.setDeadline(deadline);
         job.setQuantity(qty);
         job.setViews(views);
         job.setStatus("active");
@@ -86,8 +85,10 @@ public class DataSeedHelper {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             job.setPostedAt(sdf.parse(postedAtStr).getTime());
+            job.setDeadline(sdf.parse(deadline).getTime());
         } catch (Exception e) {
             job.setPostedAt(System.currentTimeMillis());
+            job.setDeadline(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000); // Mặc định 30 ngày
         }
         
         return job;

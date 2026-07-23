@@ -139,8 +139,29 @@ public class SearchFragment extends BaseFragment {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     allJobs.clear();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Job job = doc.toObject(Job.class);
+                        Job job = new Job();
                         job.setId(doc.getId());
+                        job.setCompanyId(doc.getString("companyId"));
+                        job.setEmployerId(doc.getString("employerId"));
+                        job.setTitle(doc.getString("title"));
+                        job.setDescription(doc.getString("description"));
+                        
+                        Long sMin = doc.getLong("salaryMin");
+                        job.setSalaryMin(sMin != null ? sMin : 0);
+                        
+                        Long sMax = doc.getLong("salaryMax");
+                        job.setSalaryMax(sMax != null ? sMax : 0);
+                        
+                        job.setLocation(doc.getString("location"));
+                        job.setJobType(doc.getString("jobType"));
+                        job.setCategory(doc.getString("category"));
+                        job.setStatus(doc.getString("status"));
+                        
+                        job.setDeadlineFromObject(doc.get("deadline"));
+                        job.setPostedAtFromObject(doc.get("postedAt"));
+                        
+                        job.setCompanyName(doc.getString("companyName"));
+
                         allJobs.add(job);
                     }
                     adapter.updateList(allJobs);

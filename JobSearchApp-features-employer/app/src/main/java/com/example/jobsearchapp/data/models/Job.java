@@ -22,7 +22,7 @@ public class Job implements Serializable {
     private String jobType; // "Full-time"/"Part-time"/"Remote"/"Internship"
     private String category;
     private String experienceRequired;
-    private String deadline;
+    private long deadline; // Lưu trữ dạng timestamp nội bộ
     private long postedAt;
     private String status; // "active"/"closed"/"pending"
     private int views;
@@ -67,10 +67,53 @@ public class Job implements Serializable {
     public void setCategory(String category) { this.category = category; }
     public String getExperienceRequired() { return experienceRequired; }
     public void setExperienceRequired(String experienceRequired) { this.experienceRequired = experienceRequired; }
-    public String getDeadline() { return deadline; }
-    public void setDeadline(String deadline) { this.deadline = deadline; }
+    public long getDeadline() { return deadline; }
+
+    // Xóa bỏ overload setDeadline(Object) gây crash Firestore
+    public void setDeadline(long deadline) { this.deadline = deadline; }
+    
+    // Đổi tên setter phụ để xử lý dữ liệu từ Firestore mà không trùng tên
+    public void setDeadlineFromObject(Object deadline) {
+        if (deadline instanceof Long) {
+            this.deadline = (Long) deadline;
+        } else if (deadline instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.deadline = sdf.parse((String) deadline).getTime();
+            } catch (Exception e) {
+                try {
+                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                    this.deadline = sdf2.parse((String) deadline).getTime();
+                } catch (Exception e2) {
+                    this.deadline = 0;
+                }
+            }
+        } else if (deadline instanceof Double) {
+            this.deadline = ((Double) deadline).longValue();
+        }
+    }
     public long getPostedAt() { return postedAt; }
     public void setPostedAt(long postedAt) { this.postedAt = postedAt; }
+
+    // Đổi tên setter phụ cho Firebase để tránh trùng overload
+    public void setPostedAtFromObject(Object postedAt) {
+        if (postedAt instanceof Long) {
+            this.postedAt = (Long) postedAt;
+        } else if (postedAt instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.postedAt = sdf.parse((String) postedAt).getTime();
+            } catch (Exception e) {
+                this.postedAt = System.currentTimeMillis();
+            }
+        } else if (postedAt instanceof Double) {
+            this.postedAt = ((Double) postedAt).longValue();
+        }
+    }
+    
+    // Alias cho Firestore
+    public void setCreatedAt(long createdAt) { this.postedAt = createdAt; }
+    public long getCreatedAt() { return postedAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public int getViews() { return views; }

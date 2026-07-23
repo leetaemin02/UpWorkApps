@@ -23,6 +23,8 @@ public class User implements Serializable {
     private String cvPath;
     private String skills;
     private String password;
+    private String companyWebsite;
+    private String companyDescription;
 
     public User() {
         this.id = java.util.UUID.randomUUID().toString();
@@ -43,6 +45,10 @@ public class User implements Serializable {
     @NonNull
     public String getId() { return id; }
     public void setId(@NonNull String id) { this.id = id; }
+    
+    // Alias cho Firestore
+    public void setUserId(String userId) { this.id = userId; }
+    public String getUserId() { return id; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getFullName() { return fullName; }
@@ -70,4 +76,9 @@ public class User implements Serializable {
     public void setSkills(String skills) { this.skills = skills; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getCompanyWebsite() { return companyWebsite; }
+    public void setCompanyWebsite(String companyWebsite) { this.companyWebsite = companyWebsite; }
+    public String getCompanyDescription() { return companyDescription; }
+    public void setCompanyDescription(String companyDescription) { this.companyDescription = companyDescription; }
 }
