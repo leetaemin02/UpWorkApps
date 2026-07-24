@@ -13,6 +13,7 @@ public class Application implements Serializable {
     private String jobId;
     private String candidateId;
     private String companyId;
+    private String employerId;
     private String cvUrl;
     private String coverLetter;
     private long appliedAt;
@@ -33,6 +34,15 @@ public class Application implements Serializable {
         this.jobId = jobId;
         this.candidateId = candidateId;
         this.companyId = companyId;
+        this.employerId = companyId; // Mặc định dùng companyId nếu không truyền employerId
+    }
+
+    public Application(String jobId, String candidateId, String companyId, String employerId) {
+        this();
+        this.jobId = jobId;
+        this.candidateId = candidateId;
+        this.companyId = companyId;
+        this.employerId = employerId;
     }
 
     // Getters and Setters
@@ -45,6 +55,8 @@ public class Application implements Serializable {
     public void setCandidateId(String candidateId) { this.candidateId = candidateId; }
     public String getCompanyId() { return companyId; }
     public void setCompanyId(String companyId) { this.companyId = companyId; }
+    public String getEmployerId() { return employerId; }
+    public void setEmployerId(String employerId) { this.employerId = employerId; }
     public String getCvUrl() { return cvUrl; }
     public void setCvUrl(String cvUrl) { this.cvUrl = cvUrl; }
     public String getCoverLetter() { return coverLetter; }

@@ -60,31 +60,46 @@ public class ManageJobsActivity extends BaseActivity implements ManageJobAdapter
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Job> jobs = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Job job = new Job();
-                        job.setId(doc.getId());
-                        job.setTitle(doc.getString("title"));
-                        
-                        Long sMin = doc.getLong("salaryMin");
-                        job.setSalaryMin(sMin != null ? sMin : 0);
-                        
-                        Long sMax = doc.getLong("salaryMax");
-                        job.setSalaryMax(sMax != null ? sMax : 0);
-                        
-                        job.setLocation(doc.getString("location"));
-                        job.setDeadlineFromObject(doc.get("deadline"));
-                        job.setDescription(doc.getString("description"));
-                        job.setRequirements(doc.getString("requirements"));
-                        job.setBenefits(doc.getString("benefits"));
-                        job.setJobType(doc.getString("jobType"));
-                        job.setCategory(doc.getString("category"));
-
-                        jobs.add(job);
+                        jobs.add(mapDocToJob(doc));
                     }
                     jobList = jobs;
                     adapter.updateList(jobList);
                 })
                 .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
         }
+    }
+
+    private Job mapDocToJob(com.google.firebase.firestore.DocumentSnapshot doc) {
+        Job job = new Job();
+        job.setId(doc.getId());
+        job.setCompanyId(doc.getString("companyId"));
+        job.setEmployerId(doc.getString("employerId"));
+        job.setTitle(doc.getString("title"));
+        job.setDescription(doc.getString("description"));
+        job.setRequirements(doc.getString("requirements"));
+        job.setBenefits(doc.getString("benefits"));
+        
+        Long sMin = doc.getLong("salaryMin");
+        job.setSalaryMin(sMin != null ? sMin : 0);
+        
+        Long sMax = doc.getLong("salaryMax");
+        job.setSalaryMax(sMax != null ? sMax : 0);
+        
+        job.setLocation(doc.getString("location"));
+        job.setJobType(doc.getString("jobType"));
+        job.setCategory(doc.getString("category"));
+        job.setExperienceRequired(doc.getString("experienceRequired"));
+        job.setStatus(doc.getString("status"));
+        
+        job.setDeadlineFromObject(doc.get("deadline"));
+        job.setPostedAtFromObject(doc.get("postedAt"));
+        if (doc.contains("createdAt")) {
+            job.setPostedAtFromObject(doc.get("createdAt"));
+        }
+        
+        job.setCompanyName(doc.getString("companyName"));
+        job.setLogoUrl(doc.getString("logoUrl"));
+        return job;
     }
 
     @Override

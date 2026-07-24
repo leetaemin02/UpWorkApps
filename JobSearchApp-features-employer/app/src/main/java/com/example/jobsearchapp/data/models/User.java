@@ -60,7 +60,20 @@ public class User implements Serializable {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public long getCreatedAt() { return createdAt; }
+    
+    // Room needs this exact match
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+    
+    // Firestore flexible mapping helper
+    public void setCreatedAtFromObject(Object createdAt) {
+        if (createdAt instanceof com.google.firebase.Timestamp) {
+            this.createdAt = ((com.google.firebase.Timestamp) createdAt).toDate().getTime();
+        } else if (createdAt instanceof Long) {
+            this.createdAt = (Long) createdAt;
+        } else if (createdAt instanceof Double) {
+            this.createdAt = ((Double) createdAt).longValue();
+        }
+    }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 

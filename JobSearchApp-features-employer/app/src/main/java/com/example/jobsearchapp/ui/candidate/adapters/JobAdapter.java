@@ -75,10 +75,19 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
         holder.tvCompanyName.setText(job.getCompanyName());
 
+        android.widget.ImageView ivCompanyLogo = holder.itemView.findViewById(R.id.ivCompanyLogo);
+        if (ivCompanyLogo != null) {
+            // Load logo if needed
+        }
+
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), JobDetailActivity.class);
-            intent.putExtra("JOB_DATA", job);
-            v.getContext().startActivity(intent);
+            if (job != null && job.getId() != null) {
+                Intent intent = new Intent(v.getContext(), JobDetailActivity.class);
+                intent.putExtra("JOB_DATA", job);
+                v.getContext().startActivity(intent);
+            } else {
+                android.widget.Toast.makeText(v.getContext(), "Không thể mở chi tiết: Dữ liệu công việc bị thiếu", android.widget.Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
