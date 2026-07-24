@@ -100,37 +100,7 @@ public class HomeFragment extends BaseFragment {
                     java.util.Set<String> uniqueCategories = new java.util.HashSet<>();
                     
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        // Trích xuất thủ công các trường quan trọng để tránh crash setter overload
-                        Job job = new Job();
-                        job.setId(doc.getId());
-                        job.setCompanyId(doc.getString("companyId"));
-                        job.setEmployerId(doc.getString("employerId"));
-                        job.setTitle(doc.getString("title"));
-                        job.setDescription(doc.getString("description"));
-                        job.setRequirements(doc.getString("requirements"));
-                        job.setBenefits(doc.getString("benefits"));
-                        
-                        Long sMin = doc.getLong("salaryMin");
-                        job.setSalaryMin(sMin != null ? sMin : 0);
-                        
-                        Long sMax = doc.getLong("salaryMax");
-                        job.setSalaryMax(sMax != null ? sMax : 0);
-                        
-                        job.setLocation(doc.getString("location"));
-                        job.setJobType(doc.getString("jobType"));
-                        job.setCategory(doc.getString("category"));
-                        job.setExperienceRequired(doc.getString("experienceRequired"));
-                        job.setStatus(doc.getString("status"));
-                        
-                        Object deadlineObj = doc.get("deadline");
-                        job.setDeadlineFromObject(deadlineObj);
-                        
-                        Object postedAtObj = doc.get("postedAt");
-                        job.setPostedAtFromObject(postedAtObj);
-                        
-                        job.setCompanyName(doc.getString("companyName"));
-                        job.setLogoUrl(doc.getString("logoUrl"));
-
+                        Job job = mapDocToJob(doc);
                         jobList.add(job);
                         
                         if (job.getCategory() != null && !job.getCategory().isEmpty()) {
@@ -141,6 +111,46 @@ public class HomeFragment extends BaseFragment {
                     updateCategoryUI(uniqueCategories);
                     jobAdapter.notifyDataSetChanged();
                 });
+    }
+
+    private Job mapDocToJob(com.google.firebase.firestore.DocumentSnapshot doc) {
+        Job job = new Job();
+        job.setId(doc.getId());
+        job.setCompanyId(doc.getString("companyId"));
+        job.setEmployerId(doc.getString("employerId"));
+        job.setTitle(doc.getString("title"));
+        job.setDescription(doc.getString("description"));
+        job.setRequirements(doc.getString("requirements"));
+        job.setBenefits(doc.getString("benefits"));
+        
+        Long sMin = doc.getLong("salaryMin");
+        job.setSalaryMin(sMin != null ? sMin : 0);
+        
+        Long sMax = doc.getLong("salaryMax");
+        job.setSalaryMax(sMax != null ? sMax : 0);
+        
+        job.setLocation(doc.getString("location"));
+        job.setJobType(doc.getString("jobType"));
+        job.setCategory(doc.getString("category"));
+        job.setExperienceRequired(doc.getString("experienceRequired"));
+        job.setStatus(doc.getString("status"));
+        
+        job.setDeadlineFromObject(doc.get("deadline"));
+        job.setPostedAtFromObject(doc.get("postedAt"));
+        if (doc.contains("createdAt")) {
+            job.setPostedAtFromObject(doc.get("createdAt"));
+        }
+        
+        job.setCompanyName(doc.getString("companyName"));
+        job.setLogoUrl(doc.getString("logoUrl"));
+        
+        // Bổ sung các trường có thể thiếu gây crash ở Detail
+        if (job.getCompanyName() == null) job.setCompanyName("Công ty ẩn danh");
+        if (job.getLocation() == null) job.setLocation("Chưa cập nhật địa điểm");
+        if (job.getDescription() == null) job.setDescription("Không có mô tả");
+        if (job.getRequirements() == null) job.setRequirements("Không có yêu cầu");
+
+        return job;
     }
 
     private void updateCategoryUI(java.util.Set<String> categories) {

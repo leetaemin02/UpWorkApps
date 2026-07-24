@@ -33,7 +33,8 @@ public class MainActivity extends BaseActivity {
         SessionManager sessionManager = new SessionManager(this);
         if ("employer".equalsIgnoreCase(sessionManager.getRole())) {
             bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(false);
-            bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(false);
+            // Hiện tại đã cho phép nhà tuyển dụng dùng Search
+            bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(true);
         }
 
         if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {

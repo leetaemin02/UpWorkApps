@@ -76,14 +76,7 @@ public class AppliedJobsFragment extends BaseFragment {
                         db.collection("jobs").document(app.getJobId()).get()
                                 .addOnSuccessListener(jobDoc -> {
                                     if (jobDoc.exists()) {
-                                        Job job = new Job();
-                                        job.setId(jobDoc.getId());
-                                        job.setTitle(jobDoc.getString("title"));
-                                        job.setCompanyName(jobDoc.getString("companyName"));
-                                        job.setLocation(jobDoc.getString("location"));
-                                        job.setDeadlineFromObject(jobDoc.get("deadline"));
-                                        
-                                        item.job = job;
+                                        item.job = mapDocToJob(jobDoc);
                                     }
                                     allApplications.add(item);
                                     if (counter.incrementAndGet() == total) {
@@ -93,6 +86,20 @@ public class AppliedJobsFragment extends BaseFragment {
                     }
                 })
                 .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
+    }
+
+    private Job mapDocToJob(com.google.firebase.firestore.DocumentSnapshot doc) {
+        Job job = new Job();
+        job.setId(doc.getId());
+        job.setTitle(doc.getString("title"));
+        job.setCompanyName(doc.getString("companyName"));
+        job.setLocation(doc.getString("location"));
+        job.setDeadlineFromObject(doc.get("deadline"));
+        job.setPostedAtFromObject(doc.get("postedAt"));
+        if (doc.contains("createdAt")) {
+            job.setPostedAtFromObject(doc.get("createdAt"));
+        }
+        return job;
     }
 
     @Override
@@ -114,9 +121,9 @@ public class AppliedJobsFragment extends BaseFragment {
     private void filterByStatus(String tabText) {
         String statusFilter;
         switch (tabText) {
-            case "Đang chờ": statusFilter = "pending"; break;
-            case "Đã duyệt": statusFilter = "Accepted"; break;
-            case "Bị từ chối": statusFilter = "Rejected"; break;
+            case "Đang xem xét": statusFilter = "pending"; break;
+            case "Phỏng vấn": statusFilter = "reviewed"; break;
+            case "Từ chối": statusFilter = "rejected"; break;
             default: statusFilter = "Tất cả"; break;
         }
 

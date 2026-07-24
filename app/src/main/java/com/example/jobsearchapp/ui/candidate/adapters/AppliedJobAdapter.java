@@ -52,14 +52,21 @@ public class AppliedJobAdapter extends RecyclerView.Adapter<AppliedJobAdapter.Vi
 
         // Đổi màu badge theo trạng thái
         switch (status) {
-            case "Đang xem xét":
+            case "pending":
+                holder.tvStatusBadge.setText("Đang xem xét");
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#0D6EFD"));
                 break;
-            case "Phỏng vấn":
+            case "reviewed":
+                holder.tvStatusBadge.setText("Phỏng vấn");
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#198754"));
                 break;
-            case "Từ chối":
+            case "rejected":
+                holder.tvStatusBadge.setText("Từ chối");
                 holder.tvStatusBadge.setTextColor(Color.parseColor("#DC3545"));
+                break;
+            case "accepted":
+                holder.tvStatusBadge.setText("Đã nhận");
+                holder.tvStatusBadge.setTextColor(Color.parseColor("#198754"));
                 break;
         }
 

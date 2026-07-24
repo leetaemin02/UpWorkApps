@@ -6,8 +6,7 @@ plugins {
 android {
     namespace = "com.example.jobsearchapp"
     compileSdk = 34
-    // ... rest of android block remains similar, but I will simplify for the replacement
-    
+
     defaultConfig {
         applicationId = "com.example.jobsearchapp"
         minSdk = 24
@@ -16,7 +15,18 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    // ...
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 dependencies {
@@ -33,9 +43,8 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
 
-    // Room Database (Keeping it for now if you want to migrate slowly)
+    // Room Database
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    // ...
 }

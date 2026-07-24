@@ -15,7 +15,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class JobDetailActivity extends BaseActivity {
 
     private Job job;
-    private TextView tvTitle, tvSalary, tvLocation, tvDesc, tvReq, tvCompany, tvExp, tvDeadline;
+    private boolean isFinishing = false;
+    private TextView tvTitle, tvSalary, tvLocation, tvDesc, tvReq, tvDetailCompany, tvExp, tvDeadline, tvFullAddress;
+    private android.widget.ImageView ivDetailLogo;
 
     private SessionManager sessionManager;
     private FirebaseFirestore db;
@@ -34,39 +36,62 @@ public class JobDetailActivity extends BaseActivity {
         tvLocation = findViewById(R.id.tvDetailLocation);
         tvDesc = findViewById(R.id.tvDetailDesc);
         tvReq = findViewById(R.id.tvDetailReq);
-        tvCompany = findViewById(R.id.tvDetailCompany);
+        tvDetailCompany = findViewById(R.id.tvDetailCompany);
         tvExp = findViewById(R.id.tvDetailExp);
         tvDeadline = findViewById(R.id.tvDetailDeadline);
+        tvFullAddress = findViewById(R.id.tvDetailFullAddress);
+        ivDetailLogo = findViewById(R.id.ivDetailLogo);
 
         db = FirebaseFirestore.getInstance();
         sessionManager = new SessionManager(this);
         appDatabase = AppDatabase.getInstance(this);
 
         // Nhận dữ liệu từ Intent
-        job = (Job) getIntent().getSerializableExtra("JOB_DATA");
+        try {
+            job = (Job) getIntent().getSerializableExtra("JOB_DATA");
+        } catch (Exception e) {
+            android.util.Log.e("JobDetail", "Error casting JOB_DATA", e);
+            job = null;
+        }
 
         if (job != null) {
             displayJobInfo();
             checkIfJobIsSaved();
+        } else {
+            // Log lỗi để debug
+            android.util.Log.e("JobDetail", "Job data is null from Intent");
+            showToast("Lỗi: Không thể tải thông tin công việc");
+            isFinishing = true;
+            finish();
         }
     }
 
     private void displayJobInfo() {
-        tvTitle.setText(job.getTitle());
-        tvSalary.setText(job.getSalaryMin() + " - " + job.getSalaryMax());
-        tvLocation.setText(job.getLocation());
-        tvDesc.setText(job.getDescription());
-        tvReq.setText(job.getRequirements());
-        tvCompany.setText(job.getCompanyName());
-        tvExp.setText(job.getExperienceRequired());
+        if (job == null) return;
+
+        if (tvTitle != null) tvTitle.setText(job.getTitle());
+        if (tvSalary != null) tvSalary.setText(job.getSalaryMin() + " - " + job.getSalaryMax());
+        if (tvLocation != null) tvLocation.setText(job.getLocation());
+        if (tvDesc != null) tvDesc.setText(job.getDescription());
+        if (tvReq != null) tvReq.setText(job.getRequirements());
+        if (tvDetailCompany != null) tvDetailCompany.setText(job.getCompanyName());
+        if (tvExp != null) tvExp.setText(job.getExperienceRequired());
+        if (tvFullAddress != null) tvFullAddress.setText(job.getLocation()); // Or address if you have it
+
+        if (ivDetailLogo != null && job.getLogoUrl() != null && !job.getLogoUrl().isEmpty()) {
+            // If you have a library like Glide or Picasso, use it here. 
+            // For now, it stays with default or you can add image loading logic.
+        }
 
         // Tính toán đếm ngược deadline
-        long diff = job.getDeadline() - System.currentTimeMillis();
-        if (diff > 0) {
-            long days = diff / (24 * 60 * 60 * 1000);
-            tvDeadline.setText("Hạn nộp: Còn " + days + " ngày");
-        } else {
-            tvDeadline.setText("Hạn nộp: Đã hết hạn");
+        if (tvDeadline != null) {
+            long diff = job.getDeadline() - System.currentTimeMillis();
+            if (diff > 0) {
+                long days = diff / (24 * 60 * 60 * 1000);
+                tvDeadline.setText("Hạn nộp: Còn " + days + " ngày");
+            } else {
+                tvDeadline.setText("Hạn nộp: Đã hết hạn");
+            }
         }
     }
 
@@ -90,6 +115,9 @@ public class JobDetailActivity extends BaseActivity {
 
     @Override
     protected void initListeners() {
+        // Không khởi tạo listeners nếu activity đang đóng do lỗi
+        if (isFinishing) return;
+
         View ivBack = findViewById(R.id.ivBack);
         if (ivBack != null) {
             ivBack.setOnClickListener(v -> finish());
@@ -107,7 +135,7 @@ public class JobDetailActivity extends BaseActivity {
                 if (job == null) return;
 
                 // Tạo đơn ứng tuyển mới
-                Application app = new Application(job.getId(), userId, job.getCompanyId());
+                Application app = new Application(job.getId(), userId, job.getCompanyId(), job.getEmployerId());
                 app.setJobTitle(job.getTitle());
                 app.setStatus("pending");
                 app.setAppliedAt(System.currentTimeMillis());
