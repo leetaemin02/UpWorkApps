@@ -12,6 +12,8 @@ import java.util.Map;
 
 public class EditProfileActivity extends BaseActivity {
     private EditText edtFullName, edtPhone, edtCompany, edtProfession, edtLocation;
+    private EditText edtWebsite, edtCompanyDesc, edtLogo;
+    private android.widget.LinearLayout layoutEmployerFields;
     private User currentUser;
     private FirebaseFirestore db;
     private String userId;
@@ -27,10 +29,19 @@ public class EditProfileActivity extends BaseActivity {
         edtProfession = findViewById(R.id.edtEditProfession);
         edtLocation = findViewById(R.id.edtEditLocation);
         
+        edtWebsite = findViewById(R.id.edtEditWebsite);
+        edtCompanyDesc = findViewById(R.id.edtEditCompanyDesc);
+        edtLogo = findViewById(R.id.edtEditLogo);
+        layoutEmployerFields = findViewById(R.id.layoutEmployerFields);
+
         db = FirebaseFirestore.getInstance();
         SessionManager sessionManager = new SessionManager(this);
         userId = sessionManager.getUserId();
         
+        if ("employer".equalsIgnoreCase(sessionManager.getRole())) {
+            layoutEmployerFields.setVisibility(android.view.View.VISIBLE);
+        }
+
         loadUserData();
     }
 
@@ -47,6 +58,10 @@ public class EditProfileActivity extends BaseActivity {
                         edtCompany.setText(currentUser.getCompanyName());
                         edtProfession.setText(currentUser.getProfession());
                         edtLocation.setText(currentUser.getLocation());
+                        
+                        if (edtWebsite != null) edtWebsite.setText(currentUser.getCompanyWebsite());
+                        if (edtCompanyDesc != null) edtCompanyDesc.setText(currentUser.getCompanyDescription());
+                        if (edtLogo != null) edtLogo.setText(currentUser.getAvatarUrl());
                     }
                 }
             })
@@ -76,6 +91,12 @@ public class EditProfileActivity extends BaseActivity {
                 updates.put("companyName", company);
                 updates.put("profession", profession);
                 updates.put("location", location);
+                
+                if (layoutEmployerFields.getVisibility() == android.view.View.VISIBLE) {
+                    updates.put("companyWebsite", edtWebsite.getText().toString().trim());
+                    updates.put("companyDescription", edtCompanyDesc.getText().toString().trim());
+                    updates.put("avatarUrl", edtLogo.getText().toString().trim());
+                }
                 
                 db.collection("users").document(userId)
                     .update(updates)

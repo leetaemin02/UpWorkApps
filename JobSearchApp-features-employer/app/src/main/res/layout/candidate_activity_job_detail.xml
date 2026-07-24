@@ -144,6 +144,16 @@
                             <TextView android:id="@+id/tvDetailExp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2 - 5 Năm" android:textColor="@color/text_main" android:textStyle="bold"/>
                         </LinearLayout>
                     </GridLayout>
+
+                    <TextView
+                        android:id="@+id/tvDetailDeadline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hạn nộp: Còn 0 ngày"
+                        android:textColor="#F44336"
+                        android:textSize="12sp"
+                        android:layout_marginTop="12dp"
+                        android:textStyle="bold"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

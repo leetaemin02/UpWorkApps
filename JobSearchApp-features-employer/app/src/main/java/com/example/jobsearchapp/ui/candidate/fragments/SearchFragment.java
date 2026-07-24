@@ -139,9 +139,7 @@ public class SearchFragment extends BaseFragment {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     allJobs.clear();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        Job job = doc.toObject(Job.class);
-                        job.setId(doc.getId());
-                        allJobs.add(job);
+                        allJobs.add(mapDocToJob(doc));
                     }
                     adapter.updateList(allJobs);
                     
@@ -150,5 +148,41 @@ public class SearchFragment extends BaseFragment {
                         performSearch();
                     }
                 });
+    }
+
+    private Job mapDocToJob(com.google.firebase.firestore.DocumentSnapshot doc) {
+        Job job = new Job();
+        job.setId(doc.getId());
+        job.setCompanyId(doc.getString("companyId"));
+        job.setEmployerId(doc.getString("employerId"));
+        job.setTitle(doc.getString("title"));
+        job.setDescription(doc.getString("description"));
+        
+        Long sMin = doc.getLong("salaryMin");
+        job.setSalaryMin(sMin != null ? sMin : 0);
+        
+        Long sMax = doc.getLong("salaryMax");
+        job.setSalaryMax(sMax != null ? sMax : 0);
+        
+        job.setLocation(doc.getString("location"));
+        job.setJobType(doc.getString("jobType"));
+        job.setCategory(doc.getString("category"));
+        job.setStatus(doc.getString("status"));
+        
+        job.setDeadlineFromObject(doc.get("deadline"));
+        job.setPostedAtFromObject(doc.get("postedAt"));
+        if (doc.contains("createdAt")) {
+            job.setPostedAtFromObject(doc.get("createdAt"));
+        }
+        
+        job.setCompanyName(doc.getString("companyName"));
+        job.setLogoUrl(doc.getString("logoUrl"));
+
+        // Bổ sung các trường có thể thiếu
+        if (job.getCompanyName() == null) job.setCompanyName("Công ty ẩn danh");
+        if (job.getLocation() == null) job.setLocation("Chưa cập nhật địa điểm");
+        if (job.getDescription() == null) job.setDescription("Không có mô tả");
+
+        return job;
     }
 }

@@ -65,7 +65,7 @@ public class PostJobActivity extends BaseActivity {
             String category = edtCategory.getText().toString().trim();
             String experience = edtExperience.getText().toString().trim();
             String quantityStr = edtQuantity.getText().toString().trim();
-            String deadline = edtDeadline.getText().toString().trim();
+            String deadlineStr = edtDeadline.getText().toString().trim();
             String requirements = edtRequirements.getText().toString().trim();
             String benefits = edtBenefits.getText().toString().trim();
 
@@ -84,6 +84,12 @@ public class PostJobActivity extends BaseActivity {
                 quantity = Integer.parseInt(quantityStr);
             } catch (Exception e) {}
 
+            long deadline = System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000;
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                deadline = sdf.parse(deadlineStr).getTime();
+            } catch (Exception e) {}
+
             String userId = sessionManager.getUserId();
             if (userId.isEmpty()) {
                 showToast("Lỗi xác thực");
@@ -92,7 +98,7 @@ public class PostJobActivity extends BaseActivity {
 
             Map<String, Object> job = new HashMap<>();
             job.put("companyId", userId);
-            job.put("employerId", userId); // Thêm trường này để đồng bộ với ManageJobsActivity
+            job.put("employerId", userId);
             job.put("title", jobTitle);
             job.put("salaryMin", salary);
             job.put("salaryMax", salary);

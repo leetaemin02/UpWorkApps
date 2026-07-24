@@ -23,6 +23,8 @@ public class User implements Serializable {
     private String cvPath;
     private String skills;
     private String password;
+    private String companyWebsite;
+    private String companyDescription;
 
     public User() {
         this.id = java.util.UUID.randomUUID().toString();
@@ -43,6 +45,10 @@ public class User implements Serializable {
     @NonNull
     public String getId() { return id; }
     public void setId(@NonNull String id) { this.id = id; }
+    
+    // Alias cho Firestore
+    public void setUserId(String userId) { this.id = userId; }
+    public String getUserId() { return id; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getFullName() { return fullName; }
@@ -54,7 +60,20 @@ public class User implements Serializable {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public long getCreatedAt() { return createdAt; }
+    
+    // Room needs this exact match
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+    
+    // Firestore flexible mapping helper
+    public void setCreatedAtFromObject(Object createdAt) {
+        if (createdAt instanceof com.google.firebase.Timestamp) {
+            this.createdAt = ((com.google.firebase.Timestamp) createdAt).toDate().getTime();
+        } else if (createdAt instanceof Long) {
+            this.createdAt = (Long) createdAt;
+        } else if (createdAt instanceof Double) {
+            this.createdAt = ((Double) createdAt).longValue();
+        }
+    }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
@@ -70,4 +89,9 @@ public class User implements Serializable {
     public void setSkills(String skills) { this.skills = skills; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getCompanyWebsite() { return companyWebsite; }
+    public void setCompanyWebsite(String companyWebsite) { this.companyWebsite = companyWebsite; }
+    public String getCompanyDescription() { return companyDescription; }
+    public void setCompanyDescription(String companyDescription) { this.companyDescription = companyDescription; }
 }

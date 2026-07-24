@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class EditJobActivity extends BaseActivity {
 
-    private EditText edtJobName, edtSalaryMin, edtSalaryMax, edtLocation, edtDescription, edtRequirements, edtBenefits, edtJobType, edtCategory;
+    private EditText edtJobName, edtSalaryMin, edtSalaryMax, edtLocation, edtDescription, edtRequirements, edtBenefits, edtJobType, edtCategory, edtDeadline;
     private Button btnUpdate;
     private ImageView ivBack;
     private FirebaseFirestore db;
@@ -34,6 +34,7 @@ public class EditJobActivity extends BaseActivity {
         edtBenefits = findViewById(R.id.edtBenefits);
         edtJobType = findViewById(R.id.edtJobType);
         edtCategory = findViewById(R.id.edtCategory);
+        edtDeadline = findViewById(R.id.edtDeadline);
         btnUpdate = findViewById(R.id.btnUpdate);
         ivBack = findViewById(R.id.ivBack);
 
@@ -55,6 +56,9 @@ public class EditJobActivity extends BaseActivity {
         edtBenefits.setText(currentJob.getBenefits());
         edtJobType.setText(currentJob.getJobType());
         edtCategory.setText(currentJob.getCategory());
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+        edtDeadline.setText(sdf.format(new java.util.Date(currentJob.getDeadline())));
     }
 
     @Override
@@ -84,6 +88,14 @@ public class EditJobActivity extends BaseActivity {
             updates.put("benefits", edtBenefits.getText().toString().trim());
             updates.put("jobType", edtJobType.getText().toString().trim());
             updates.put("category", edtCategory.getText().toString().trim());
+
+            String deadlineStr = edtDeadline.getText().toString().trim();
+            long deadline = currentJob.getDeadline();
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                deadline = sdf.parse(deadlineStr).getTime();
+            } catch (Exception e) {}
+            updates.put("deadline", deadline);
 
             db.collection("jobs").document(currentJob.getId())
                 .update(updates)

@@ -43,10 +43,10 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
         holder.tvStatus.setText("Trạng thái: " + translateStatus(status));
 
         // Đổi màu text trạng thái
-        if ("Accepted".equals(status)) {
+        if ("Accepted".equalsIgnoreCase(status)) {
             holder.tvStatus.setTextColor(Color.parseColor("#198754")); // success color
             holder.layoutActions.setVisibility(View.GONE);
-        } else if ("Rejected".equals(status)) {
+        } else if ("Rejected".equalsIgnoreCase(status)) {
             holder.tvStatus.setTextColor(Color.parseColor("#DC3545")); // error color
             holder.layoutActions.setVisibility(View.GONE);
         } else {
@@ -59,9 +59,10 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
     }
 
     private String translateStatus(String status) {
-        if ("Pending".equals(status)) return "Đang chờ";
-        if ("Accepted".equals(status)) return "Đã chấp nhận";
-        if ("Rejected".equals(status)) return "Đã từ chối";
+        if (status == null) return "Chưa có";
+        if ("pending".equalsIgnoreCase(status)) return "Đang chờ";
+        if ("Accepted".equalsIgnoreCase(status)) return "Đã chấp nhận";
+        if ("Rejected".equalsIgnoreCase(status)) return "Đã từ chối";
         return status;
     }
 

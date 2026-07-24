@@ -50,8 +50,9 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
     private void loadApplicants() {
         String employerId = sessionManager.getUserId();
         if (!employerId.isEmpty()) {
+            // Sử dụng companyId làm fallback cho các đơn cũ chưa có employerId
             db.collection("applications")
-                .whereEqualTo("employerId", employerId)
+                .whereEqualTo("companyId", employerId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Applicant> applicants = new ArrayList<>();
@@ -65,32 +66,56 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Application app = doc.toObject(Application.class);
+                        if (app == null) {
+                            if (counter.incrementAndGet() == total) {
+                                applicantList = applicants;
+                                adapter.updateList(applicantList);
+                            }
+                            continue;
+                        }
                         app.setId(doc.getId());
 
                         // Fetch User and Job details for each application
-                        db.collection("users").document(app.getCandidateId()).get()
-                            .addOnSuccessListener(userDoc -> {
-                                User user = userDoc.toObject(User.class);
-                                db.collection("jobs").document(app.getJobId()).get()
-                                    .addOnSuccessListener(jobDoc -> {
-                                        Job job = jobDoc.toObject(Job.class);
-                                        
-                                        if (user != null) {
-                                            Applicant applicant = new Applicant();
-                                            applicant.setApplicationId(app.getId());
-                                            applicant.setId(userDoc.getId());
-                                            applicant.setName(user.getFullName());
-                                            applicant.setEmail(user.getEmail());
-                                            applicant.setJobTitle(job != null ? job.getTitle() : "N/A");
-                                            applicant.setStatus(app.getStatus());
-                                            applicants.add(applicant);
-                                        }
+                        if (app.getCandidateId() == null || app.getJobId() == null) {
+                            if (counter.incrementAndGet() == total) {
+                                applicantList = applicants;
+                                adapter.updateList(applicantList);
+                            }
+                            continue;
+                        }
 
-                                        if (counter.incrementAndGet() == total) {
-                                            applicantList = applicants;
-                                            adapter.updateList(applicantList);
-                                        }
-                                    });
+                        db.collection("users").document(app.getCandidateId()).get()
+                            .addOnCompleteListener(userTask -> {
+                                if (userTask.isSuccessful() && userTask.getResult() != null && userTask.getResult().exists()) {
+                                    User user = userTask.getResult().toObject(User.class);
+                                    db.collection("jobs").document(app.getJobId()).get()
+                                        .addOnCompleteListener(jobTask -> {
+                                            if (jobTask.isSuccessful() && jobTask.getResult() != null && jobTask.getResult().exists()) {
+                                                Job job = jobTask.getResult().toObject(Job.class);
+                                                
+                                                if (user != null) {
+                                                    Applicant applicant = new Applicant();
+                                                    applicant.setApplicationId(app.getId());
+                                                    applicant.setId(userTask.getResult().getId());
+                                                    applicant.setName(user.getFullName());
+                                                    applicant.setEmail(user.getEmail());
+                                                    applicant.setJobTitle(job != null ? job.getTitle() : "N/A");
+                                                    applicant.setStatus(app.getStatus());
+                                                    applicants.add(applicant);
+                                                }
+                                            }
+
+                                            if (counter.incrementAndGet() == total) {
+                                                applicantList = applicants;
+                                                adapter.updateList(applicantList);
+                                            }
+                                        });
+                                } else {
+                                    if (counter.incrementAndGet() == total) {
+                                        applicantList = applicants;
+                                        adapter.updateList(applicantList);
+                                    }
+                                }
                             });
                     }
                 })

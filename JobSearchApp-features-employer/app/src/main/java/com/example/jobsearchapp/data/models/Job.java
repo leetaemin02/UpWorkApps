@@ -22,7 +22,7 @@ public class Job implements Serializable {
     private String jobType; // "Full-time"/"Part-time"/"Remote"/"Internship"
     private String category;
     private String experienceRequired;
-    private String deadline;
+    private long deadline; // Lưu trữ dạng timestamp nội bộ
     private long postedAt;
     private String status; // "active"/"closed"/"pending"
     private int views;
@@ -45,7 +45,9 @@ public class Job implements Serializable {
     public void setId(@NonNull String id) { this.id = id; }
     public String getCompanyId() { return companyId; }
     public void setCompanyId(String companyId) { this.companyId = companyId; }
-    public String getEmployerId() { return employerId; }
+    public String getEmployerId() { 
+        return (employerId != null && !employerId.isEmpty()) ? employerId : companyId; 
+    }
     public void setEmployerId(String employerId) { this.employerId = employerId; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -67,17 +69,67 @@ public class Job implements Serializable {
     public void setCategory(String category) { this.category = category; }
     public String getExperienceRequired() { return experienceRequired; }
     public void setExperienceRequired(String experienceRequired) { this.experienceRequired = experienceRequired; }
-    public String getDeadline() { return deadline; }
-    public void setDeadline(String deadline) { this.deadline = deadline; }
+    public long getDeadline() { return deadline; }
+
+    public void setDeadline(long deadline) { this.deadline = deadline; }
+    
+    // Phương thức xử lý linh hoạt từ Object
+    public void setDeadlineFromObject(Object deadline) {
+        if (deadline == null) return;
+        if (deadline instanceof Long) {
+            this.deadline = (Long) deadline;
+        } else if (deadline instanceof com.google.firebase.Timestamp) {
+            this.deadline = ((com.google.firebase.Timestamp) deadline).toDate().getTime();
+        } else if (deadline instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.deadline = sdf.parse((String) deadline).getTime();
+            } catch (Exception e) {
+                try {
+                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                    this.deadline = sdf2.parse((String) deadline).getTime();
+                } catch (Exception e2) {
+                    this.deadline = 0;
+                }
+            }
+        } else if (deadline instanceof Double) {
+            this.deadline = ((Double) deadline).longValue();
+        }
+    }
     public long getPostedAt() { return postedAt; }
+    
     public void setPostedAt(long postedAt) { this.postedAt = postedAt; }
+    
+    // Phương thức xử lý linh hoạt cho Firebase
+    public void setPostedAtFromObject(Object postedAt) {
+        if (postedAt == null) return;
+        if (postedAt instanceof Long) {
+            this.postedAt = (Long) postedAt;
+        } else if (postedAt instanceof com.google.firebase.Timestamp) {
+            this.postedAt = ((com.google.firebase.Timestamp) postedAt).toDate().getTime();
+        } else if (postedAt instanceof String) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
+                this.postedAt = sdf.parse((String) postedAt).getTime();
+            } catch (Exception e) {
+                this.postedAt = System.currentTimeMillis();
+            }
+        } else if (postedAt instanceof Double) {
+            this.postedAt = ((Double) postedAt).longValue();
+        }
+    }
+    
+    public void setCreatedAt(long createdAt) { this.postedAt = createdAt; }
+    public long getCreatedAt() { return postedAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public int getViews() { return views; }
     public void setViews(int views) { this.views = views; }
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
-    public String getCompanyName() { return companyName; }
+    public String getCompanyName() { 
+        return (companyName != null) ? companyName : "Công ty ẩn danh"; 
+    }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
     public String getLogoUrl() { return logoUrl; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
