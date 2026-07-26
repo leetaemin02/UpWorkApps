@@ -35,7 +35,11 @@ public abstract class AppDatabase extends RoomDatabase {
                     .allowMainThreadQueries()
                     .build();
             
-            instance.seedData();
+            // Xóa sạch dữ liệu cũ (chạy một lần nếu bạn muốn dọn dẹp)
+            instance.clearAllTables();
+            
+            // Bỏ hoặc comment dòng này để không tự thêm dữ liệu mẫu nữa
+            // instance.seedData();
         }
         return instance;
     }

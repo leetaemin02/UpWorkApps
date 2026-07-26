@@ -41,23 +41,29 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
         notifyDataSetChanged();
     }
 
+    public void sortBySalary(boolean ascending) {
+        Collections.sort(jobList, (j1, j2) -> {
+            if (ascending) {
+                return Long.compare(j1.getSalaryMin(), j2.getSalaryMin());
+            } else {
+                return Long.compare(j2.getSalaryMin(), j1.getSalaryMin());
+            }
+        });
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemViewType(int position) {
-        Job job = jobList.get(position);
-        boolean isActive = job.getStatus() != null && job.getStatus().equals("active");
-        return isActive && position % 5 == 0 ? TYPE_FEATURED : TYPE_REGULAR;
+        // Bỏ logic đề xuất, luôn trả về kiểu bình thường để giao diện đồng nhất
+        return TYPE_REGULAR;
     }
 
     @NonNull
     @Override
     public JobViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
-        int layout = (viewType == TYPE_FEATURED)
-                ? R.layout.candidate_item_job_featured
-                : R.layout.candidate_item_job;
-
+        // Luôn sử dụng layout candidate_item_job cho tất cả công việc
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(layout, parent, false);
+                .inflate(R.layout.candidate_item_job, parent, false);
 
         return new JobViewHolder(view);
     }
@@ -103,32 +109,33 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
         notifyDataSetChanged();
     }
 
-    public void filter(String query, String typeFilter) {
-
+    public void filter(String query, List<String> selectedCategories, long minSalary, long maxSalary) {
         jobList.clear();
-
         String q = query.toLowerCase().trim();
 
         for (Job item : jobListFull) {
-
+            // Keyword match
             String title = item.getTitle() == null ? "" : item.getTitle().toLowerCase();
-            String desc = item.getDescription() == null ? "" : item.getDescription().toLowerCase();
+            String comp = item.getCompanyName() == null ? "" : item.getCompanyName().toLowerCase();
+            boolean matchQuery = q.isEmpty() || title.contains(q) || comp.contains(q);
 
-            boolean matchQuery =
-                    q.isEmpty() ||
-                            title.contains(q) ||
-                            desc.contains(q);
+            // Categories match (OR logic: if any selected category matches the job's category)
+            boolean matchCategory = selectedCategories == null || selectedCategories.isEmpty() ||
+                    (item.getCategory() != null && selectedCategories.contains(item.getCategory()));
 
-            boolean matchType =
-                    typeFilter == null ||
-                            (item.getJobType() != null &&
-                                    item.getJobType().equals(typeFilter));
+            // Salary match
+            boolean matchSalary = true;
+            if (maxSalary > 0) {
+                matchSalary = item.getSalaryMin() >= minSalary && item.getSalaryMin() <= maxSalary;
+            } else if (minSalary > 0) {
+                // For "Over X" case where maxSalary might be set to -1 or 0
+                matchSalary = item.getSalaryMin() >= minSalary;
+            }
 
-            if (matchQuery && matchType) {
+            if (matchQuery && matchCategory && matchSalary) {
                 jobList.add(item);
             }
         }
-
         notifyDataSetChanged();
     }
 

@@ -5,6 +5,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,11 +28,18 @@ public class SearchFragment extends BaseFragment {
     private RecyclerView rvSearchResults;
     private JobAdapter adapter;
     private EditText edtSearch;
-    private TextView tvResultCount, tvSort;
-    private String currentTypeFilter = null;
+    private TextView tvResultCount, tvSort, tvSalaryFilter;
+    private ChipGroup cgCategories;
+    private LinearLayout layoutPagination;
+    private android.widget.ProgressBar pbSearch;
+    private List<String> selectedCategories = new ArrayList<>();
+    private long minSalaryFilter = 0, maxSalaryFilter = 0;
     private String initialQuery = null;
     private FirebaseFirestore db;
     private List<Job> allJobs = new ArrayList<>();
+    private List<Job> filteredJobs = new ArrayList<>();
+    private int currentPage = 1;
+    private final int PAGE_SIZE = 10;
 
     @Override
     protected int getLayoutId() {
@@ -52,37 +60,250 @@ public class SearchFragment extends BaseFragment {
         edtSearch = view.findViewById(R.id.edtSearch);
         tvResultCount = view.findViewById(R.id.tvResultCount);
         tvSort = view.findViewById(R.id.tvSort);
+        tvSalaryFilter = view.findViewById(R.id.tvSalaryFilter);
+        cgCategories = view.findViewById(R.id.cgCategories);
+        layoutPagination = view.findViewById(R.id.layoutPagination);
+        pbSearch = view.findViewById(R.id.pbSearch);
         
         db = FirebaseFirestore.getInstance();
 
         setupRecyclerView();
-        setupChips(view);
+        setupSwipeNavigation();
         loadJobsFromFirebase();
     }
 
-    private void setupChips(View view) {
-        ChipGroup chipGroup = view.findViewById(R.id.chipGroup);
-        if (chipGroup != null) {
-            chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-                if (checkedIds.isEmpty()) {
-                    currentTypeFilter = null;
+    private void populateCategoryChips(java.util.Set<String> categories) {
+        if (cgCategories == null) return;
+        cgCategories.removeAllViews();
+        
+        int[][] states = new int[][] {
+            new int[] {android.R.attr.state_checked}, // checked
+            new int[] {-android.R.attr.state_checked} // unchecked
+        };
+
+        for (String category : categories) {
+            if (category == null || category.isEmpty()) continue;
+            Chip chip = new Chip(getContext());
+            chip.setText(category);
+            chip.setCheckable(true);
+            chip.setClickable(true);
+            
+            // Hiệu ứng Tick và màu sắc khi chọn
+            chip.setCheckedIconVisible(true);
+            
+            // Màu nền: Xanh nhạt khi chọn, Trắng khi không chọn
+            int[] bgColors = new int[] {
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary_light),
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.white)
+            };
+            chip.setChipBackgroundColor(new android.content.res.ColorStateList(states, bgColors));
+            
+            // Màu viền: Xanh đậm khi chọn, Xám khi không chọn
+            int[] strokeColors = new int[] {
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary),
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.gray_border)
+            };
+            chip.setChipStrokeColor(new android.content.res.ColorStateList(states, strokeColors));
+            chip.setChipStrokeWidth(2f);
+
+            // Màu chữ: Xanh đậm khi chọn, Đen khi không chọn
+            int[] textColors = new int[] {
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary),
+                androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_main)
+            };
+            chip.setTextColor(new android.content.res.ColorStateList(states, textColors));
+            
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedCategories.add(category);
                 } else {
-                    Chip chip = group.findViewById(checkedIds.get(0));
-                    if (chip != null) {
-                        currentTypeFilter = chip.getText().toString();
-                    }
+                    selectedCategories.remove(category);
                 }
+                currentPage = 1; // Reset về trang 1 khi lọc
                 performSearch();
             });
+            
+            cgCategories.addView(chip);
         }
     }
 
     private void performSearch() {
-        if (adapter != null && edtSearch != null) {
-            String query = edtSearch.getText().toString();
-            adapter.filter(query, currentTypeFilter);
-            updateResultCount(adapter.getItemCount());
+        if (allJobs.isEmpty()) return;
+        
+        String query = (edtSearch != null) ? edtSearch.getText().toString().toLowerCase().trim() : "";
+        filteredJobs.clear();
+
+        for (Job item : allJobs) {
+            String title = item.getTitle() == null ? "" : item.getTitle().toLowerCase();
+            String comp = item.getCompanyName() == null ? "" : item.getCompanyName().toLowerCase();
+            boolean matchQuery = query.isEmpty() || title.contains(query) || comp.contains(query);
+
+            boolean matchCategory = selectedCategories.isEmpty() ||
+                    (item.getCategory() != null && selectedCategories.contains(item.getCategory()));
+
+            boolean matchSalary = true;
+            if (maxSalaryFilter > 0) {
+                matchSalary = item.getSalaryMin() >= minSalaryFilter && item.getSalaryMin() <= maxSalaryFilter;
+            } else if (minSalaryFilter > 0) {
+                matchSalary = item.getSalaryMin() >= minSalaryFilter;
+            }
+
+            if (matchQuery && matchCategory && matchSalary) {
+                filteredJobs.add(item);
+            }
         }
+
+        updateResultCount(filteredJobs.size());
+        updatePaginationUI();
+        displayCurrentPage();
+    }
+
+    private void displayCurrentPage() {
+        if (adapter == null) return;
+        
+        int start = (currentPage - 1) * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, filteredJobs.size());
+        
+        if (start < filteredJobs.size()) {
+            List<Job> pageItems = filteredJobs.subList(start, end);
+            adapter.updateList(new ArrayList<>(pageItems));
+        } else {
+            adapter.updateList(new ArrayList<>());
+        }
+    }
+
+    private void updatePaginationUI() {
+        if (layoutPagination == null) return;
+        layoutPagination.removeAllViews();
+        
+        int totalPages = (int) Math.ceil((double) filteredJobs.size() / PAGE_SIZE);
+        if (totalPages <= 1) return;
+
+        int startPage, endPage;
+        boolean showStartDots = false;
+        boolean showEndDots = false;
+
+        if (totalPages <= 5) {
+            startPage = 1;
+            endPage = totalPages;
+        } else {
+            if (currentPage <= 3) {
+                startPage = 1;
+                endPage = 4;
+                showEndDots = true;
+            } else if (currentPage >= totalPages - 2) {
+                startPage = totalPages - 3;
+                endPage = totalPages;
+                showStartDots = true;
+            } else {
+                startPage = currentPage - 1;
+                endPage = currentPage + 1;
+                showStartDots = true;
+                showEndDots = true;
+            }
+        }
+
+        // Trang đầu
+        if (showStartDots) {
+            addPageButton("1", currentPage == 1, () -> {
+                currentPage = 1;
+                refreshPage();
+            });
+            addDots();
+        }
+
+        // Các trang ở giữa
+        for (int i = startPage; i <= endPage; i++) {
+            final int pageNum = i;
+            addPageButton(String.valueOf(pageNum), pageNum == currentPage, () -> {
+                currentPage = pageNum;
+                refreshPage();
+            });
+        }
+
+        // Dấu ba chấm và trang cuối
+        if (showEndDots) {
+            addDots();
+            addPageButton(String.valueOf(totalPages), currentPage == totalPages, () -> {
+                currentPage = totalPages;
+                refreshPage();
+            });
+        }
+    }
+
+    private void addDots() {
+        TextView tv = new TextView(getContext());
+        tv.setText("...");
+        tv.setPadding(12, 0, 12, 0);
+        tv.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_sub));
+        layoutPagination.addView(tv);
+    }
+
+    private void addPageButton(String text, boolean isSelected, Runnable onClick) {
+        TextView btn = new TextView(getContext());
+        int size = (int) (38 * getResources().getDisplayMetrics().density);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+        params.setMargins(8, 0, 8, 0);
+        btn.setLayoutParams(params);
+        btn.setText(text);
+        btn.setGravity(android.view.Gravity.CENTER);
+        btn.setTextSize(14);
+        btn.setBackgroundResource(R.drawable.bg_page_item);
+        btn.setSelected(isSelected);
+        
+        if (isSelected) {
+            btn.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.white));
+        } else {
+            btn.setTextColor(androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary));
+        }
+
+        btn.setOnClickListener(v -> onClick.run());
+        layoutPagination.addView(btn);
+    }
+
+    private void refreshPage() {
+        updatePaginationUI();
+        displayCurrentPage();
+        if (rvSearchResults != null) rvSearchResults.scrollToPosition(0);
+    }
+
+    private void setupSwipeNavigation() {
+        final android.view.GestureDetector gestureDetector = new android.view.GestureDetector(getContext(), 
+            new android.view.GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onDown(android.view.MotionEvent e) {
+                    return true;
+                }
+
+                @Override
+                public boolean onFling(android.view.MotionEvent e1, android.view.MotionEvent e2, float velocityX, float velocityY) {
+                    if (e1 == null || e2 == null) return false;
+                    float diffX = e2.getX() - e1.getX();
+                    float diffY = e2.getY() - e1.getY();
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 100 && Math.abs(velocityX) > 100) {
+                        int totalPages = (int) Math.ceil((double) filteredJobs.size() / PAGE_SIZE);
+                        if (diffX < 0) {
+                            if (currentPage < totalPages) {
+                                currentPage++;
+                                refreshPage();
+                                return true;
+                            }
+                        } else {
+                            if (currentPage > 1) {
+                                currentPage--;
+                                refreshPage();
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            });
+
+        rvSearchResults.setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            return false;
+        });
     }
 
     @Override
@@ -93,6 +314,7 @@ public class SearchFragment extends BaseFragment {
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentPage = 1;
                     performSearch();
                 }
                 @Override
@@ -103,6 +325,48 @@ public class SearchFragment extends BaseFragment {
         if (tvSort != null) {
             tvSort.setOnClickListener(v -> showSortMenu());
         }
+
+        if (tvSalaryFilter != null) {
+            tvSalaryFilter.setOnClickListener(v -> showSalaryFilterMenu());
+        }
+    }
+
+    private void showSalaryFilterMenu() {
+        PopupMenu popup = new PopupMenu(getContext(), tvSalaryFilter);
+        popup.getMenu().add("Tất cả mức lương");
+        popup.getMenu().add("Dưới 10 triệu");
+        popup.getMenu().add("10 - 20 triệu");
+        popup.getMenu().add("Trên 20 triệu");
+        popup.getMenu().add("-----------------");
+        popup.getMenu().add("Lương: Thấp đến Cao");
+        popup.getMenu().add("Lương: Cao đến Thấp");
+
+        popup.setOnMenuItemClickListener(item -> {
+            String title = item.getTitle().toString();
+            if (title.equals("-----------------")) return false;
+
+            if (title.contains("Lương:")) {
+                if (adapter != null) {
+                    adapter.sortBySalary(title.contains("Thấp đến Cao"));
+                    displayCurrentPage();
+                }
+            } else {
+                tvSalaryFilter.setText(title + " ▼");
+                if (title.equals("Tất cả mức lương")) {
+                    minSalaryFilter = 0; maxSalaryFilter = 0;
+                } else if (title.equals("Dưới 10 triệu")) {
+                    minSalaryFilter = 0; maxSalaryFilter = 10000000;
+                } else if (title.equals("10 - 20 triệu")) {
+                    minSalaryFilter = 10000000; maxSalaryFilter = 20000000;
+                } else if (title.equals("Trên 20 triệu")) {
+                    minSalaryFilter = 20000000; maxSalaryFilter = 0;
+                }
+                currentPage = 1;
+                performSearch();
+            }
+            return true;
+        });
+        popup.show();
     }
 
     private void showSortMenu() {
@@ -115,6 +379,7 @@ public class SearchFragment extends BaseFragment {
             tvSort.setText(title + " ▼");
             if (adapter != null) {
                 adapter.sort(title.equals("Mới nhất"));
+                displayCurrentPage();
             }
             return true;
         });
@@ -123,7 +388,7 @@ public class SearchFragment extends BaseFragment {
 
     private void updateResultCount(int count) {
         if (tvResultCount != null) {
-            tvResultCount.setText("Tìm thấy " + count + " kết quả");
+            tvResultCount.setText("Tìm thấy " + count + " việc làm phù hợp");
         }
     }
 
@@ -134,18 +399,29 @@ public class SearchFragment extends BaseFragment {
     }
 
     private void loadJobsFromFirebase() {
+        if (pbSearch != null) pbSearch.setVisibility(View.VISIBLE);
         db.collection("jobs")
-                .get()
+                .get(com.google.firebase.firestore.Source.SERVER)
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (pbSearch != null) pbSearch.setVisibility(View.GONE);
                     allJobs.clear();
+                    filteredJobs.clear();
+                    java.util.Set<String> uniqueCategories = new java.util.TreeSet<>();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         allJobs.add(mapDocToJob(doc));
                     }
-                    adapter.updateList(allJobs);
+                    
+                    for (Job job : allJobs) {
+                        if (job.getCategory() != null && !job.getCategory().isEmpty()) {
+                            uniqueCategories.add(job.getCategory());
+                        }
+                    }
+                    
+                    populateCategoryChips(uniqueCategories);
+                    performSearch();
                     
                     if (initialQuery != null && edtSearch != null) {
                         edtSearch.setText(initialQuery);
-                        performSearch();
                     }
                 });
     }

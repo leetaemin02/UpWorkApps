@@ -14,40 +14,67 @@
         <!-- Search Bar -->
         <include layout="@layout/search_bar_component" /> <!-- Tách riêng search bar để dùng lại -->
 
-        <!-- Filters (Chips) -->
+        <!-- Categories Multi-select (Horizontal Scroll) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Danh mục công việc"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/text_main" />
+
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="none"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="8dp">
 
             <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroup"
+                android:id="@+id/cgCategories"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:singleSelection="true"
+                app:singleSelection="false"
                 app:selectionRequired="false"
                 app:singleLine="true">
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:text="Toàn thời gian" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:text="Bán thời gian" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:text="Mức lương" />
+                <!-- Chips will be added dynamically -->
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
+
+        <!-- Search and Salary Sort Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/tvSalaryFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mức lương ▼"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:background="@drawable/bg_search_bar"
+                android:textSize="13sp"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tvSort"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mới nhất ▼"
+                android:textSize="13sp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -58,18 +85,8 @@
                 android:id="@+id/tvResultCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tìm thấy 128 kết quả"
+                android:text="Đang tải dữ liệu..."
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSort"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="Mới nhất ▼"
-                android:textSize="12sp"
-                android:clickable="true"
-                android:focusable="true" />
         </RelativeLayout>
 
         <!-- Job List -->
@@ -80,83 +97,24 @@
             android:layout_marginTop="8dp"
             android:nestedScrollingEnabled="false" />
 
-        <!-- Job Alert Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
+        <ProgressBar
+            android:id="@+id/pbSearch"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:cardCornerRadius="12dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/gray_border">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@android:drawable/ic_input_add" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tạo thông báo việc làm"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Thiết lập ngay"
-                    android:layout_marginTop="12dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
 
         <!-- Pagination -->
         <LinearLayout
+            android:id="@+id/layoutPagination"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:orientation="horizontal"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="24dp">
-
-            <Button
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="&lt;"
-                android:padding="0dp" />
-
-            <Button
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="1"
-                android:layout_marginStart="8dp" />
-
-            <Button
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="2"
-                android:layout_marginStart="8dp" />
-
-            <Button
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="3"
-                android:layout_marginStart="8dp" />
-
-            <Button
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="&gt;"
-                android:layout_marginStart="8dp" />
+            <!-- Buttons will be added dynamically -->
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

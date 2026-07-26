@@ -10,7 +10,6 @@ import com.example.jobsearchapp.ui.candidate.fragments.AppliedJobsFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.HomeFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.ProfileFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.SearchFragment;
-import com.example.jobsearchapp.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends BaseActivity {
@@ -30,12 +29,9 @@ public class MainActivity extends BaseActivity {
         tvAppName = findViewById(R.id.tvAppName);
         ivProfile = findViewById(R.id.ivProfile);
 
-        SessionManager sessionManager = new SessionManager(this);
-        if ("employer".equalsIgnoreCase(sessionManager.getRole())) {
-            bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(false);
-            // Hiện tại đã cho phép nhà tuyển dụng dùng Search
-            bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(true);
-        }
+        // Luôn hiển thị đầy đủ các Tab chức năng cho người dùng
+        bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(true);
+        bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(true);
 
         if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
             replaceFragment(new HomeFragment());

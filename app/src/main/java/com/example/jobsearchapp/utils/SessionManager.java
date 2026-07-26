@@ -21,8 +21,23 @@ public class SessionManager {
         editor.apply();
     }
 
-    public String getUserId() { return pref.getString(KEY_USER_ID, ""); }
-    public String getRole() { return pref.getString(KEY_ROLE, ""); }
+    public String getUserId() {
+        try {
+            return pref.getString(KEY_USER_ID, "");
+        } catch (ClassCastException e) {
+            editor.remove(KEY_USER_ID).apply();
+            return "";
+        }
+    }
+
+    public String getRole() {
+        try {
+            return pref.getString(KEY_ROLE, "");
+        } catch (ClassCastException e) {
+            editor.remove(KEY_ROLE).apply();
+            return "";
+        }
+    }
 
     public void logout() {
         editor.clear();

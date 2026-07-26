@@ -49,6 +49,8 @@ public class User implements Serializable {
     // Alias cho Firestore
     public void setUserId(String userId) { this.id = userId; }
     public String getUserId() { return id; }
+    public void setUid(String uid) { this.id = uid; }
+    public String getUid() { return id; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getFullName() { return fullName; }

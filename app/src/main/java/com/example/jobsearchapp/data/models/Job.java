@@ -22,7 +22,7 @@ public class Job implements Serializable {
     private String jobType; // "Full-time"/"Part-time"/"Remote"/"Internship"
     private String category;
     private String experienceRequired;
-    private long deadline; // Lưu trữ dạng timestamp nội bộ
+    private long deadline; // Giữ kiểu long cho Room
     private long postedAt;
     private String status; // "active"/"closed"/"pending"
     private int views;
@@ -69,32 +69,38 @@ public class Job implements Serializable {
     public void setCategory(String category) { this.category = category; }
     public String getExperienceRequired() { return experienceRequired; }
     public void setExperienceRequired(String experienceRequired) { this.experienceRequired = experienceRequired; }
+    
     public long getDeadline() { return deadline; }
 
+    // Setter chuẩn cho Room và code Java
     public void setDeadline(long deadline) { this.deadline = deadline; }
     
-    // Phương thức xử lý linh hoạt từ Object
-    public void setDeadlineFromObject(Object deadline) {
-        if (deadline == null) return;
-        if (deadline instanceof Long) {
-            this.deadline = (Long) deadline;
-        } else if (deadline instanceof com.google.firebase.Timestamp) {
-            this.deadline = ((com.google.firebase.Timestamp) deadline).toDate().getTime();
-        } else if (deadline instanceof String) {
+    // Setter linh hoạt cho Firestore (handles String, Long, Timestamp)
+    public void setDeadline(Object deadlineObj) {
+        if (deadlineObj == null) return;
+        if (deadlineObj instanceof Long) {
+            this.deadline = (Long) deadlineObj;
+        } else if (deadlineObj instanceof com.google.firebase.Timestamp) {
+            this.deadline = ((com.google.firebase.Timestamp) deadlineObj).toDate().getTime();
+        } else if (deadlineObj instanceof String) {
             try {
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault());
-                this.deadline = sdf.parse((String) deadline).getTime();
+                // Thử parse các định dạng ngày phổ biến
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                this.deadline = sdf.parse((String) deadlineObj).getTime();
             } catch (Exception e) {
                 try {
-                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
-                    this.deadline = sdf2.parse((String) deadline).getTime();
+                    java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+                    this.deadline = sdf2.parse((String) deadlineObj).getTime();
                 } catch (Exception e2) {
                     this.deadline = 0;
                 }
             }
-        } else if (deadline instanceof Double) {
-            this.deadline = ((Double) deadline).longValue();
         }
+    }
+    
+    // Giữ lại tên cũ để tránh lỗi compile nếu có gọi trực tiếp
+    public void setDeadlineFromObject(Object deadline) {
+        setDeadline(deadline);
     }
     public long getPostedAt() { return postedAt; }
     

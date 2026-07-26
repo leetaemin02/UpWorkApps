@@ -22,6 +22,8 @@ public class Application implements Serializable {
     // Denormalization
     private String jobTitle;
     private String candidateName;
+    private String companyName;
+    private String location;
 
     public Application() {
         this.id = java.util.UUID.randomUUID().toString();
@@ -69,4 +71,8 @@ public class Application implements Serializable {
     public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
     public String getCandidateName() { return candidateName; }
     public void setCandidateName(String candidateName) { this.candidateName = candidateName; }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 }
