@@ -18,4 +18,5 @@
     <color name="success">#198754</color>
     <color name="error">#DC3545</color>
     <color name="tag_bg">#F1F3F5</color>
+    <color name="yellow_star">#FFB300</color>
 </resources>

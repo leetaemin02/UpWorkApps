@@ -95,6 +95,18 @@
             android:text="Chưa có tài khoản? Đăng ký ngay"
             android:textColor="@color/primary"
             android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackToGuest"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiếp tục với tư cách Khách"
+            android:textAllCaps="false"
+            android:textColor="@color/text_sub"
+            app:icon="@android:drawable/ic_menu_revert"
+            app:iconTint="@color/text_sub"
             android:layout_marginBottom="40dp"/>
 
     </LinearLayout>

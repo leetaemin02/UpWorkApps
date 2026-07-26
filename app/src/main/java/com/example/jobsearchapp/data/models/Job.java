@@ -76,7 +76,8 @@ public class Job implements Serializable {
     public void setDeadline(long deadline) { this.deadline = deadline; }
     
     // Setter linh hoạt cho Firestore (handles String, Long, Timestamp)
-    public void setDeadline(Object deadlineObj) {
+    // Đổi tên để tránh xung đột "multiple setter overloads" trong Firebase
+    public void setDeadlineFromObject(Object deadlineObj) {
         if (deadlineObj == null) return;
         if (deadlineObj instanceof Long) {
             this.deadline = (Long) deadlineObj;
@@ -96,11 +97,6 @@ public class Job implements Serializable {
                 }
             }
         }
-    }
-    
-    // Giữ lại tên cũ để tránh lỗi compile nếu có gọi trực tiếp
-    public void setDeadlineFromObject(Object deadline) {
-        setDeadline(deadline);
     }
     public long getPostedAt() { return postedAt; }
     

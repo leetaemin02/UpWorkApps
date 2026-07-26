@@ -19,6 +19,7 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
     public interface OnApplicantActionListener {
         void onAccept(Applicant applicant);
         void onReject(Applicant applicant);
+        void onViewDetail(Applicant applicant);
     }
 
     public ApplicantAdapter(List<Applicant> applicantList, OnApplicantActionListener listener) {
@@ -44,18 +45,21 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
 
         // Đổi màu text trạng thái
         if ("Accepted".equalsIgnoreCase(status)) {
-            holder.tvStatus.setTextColor(Color.parseColor("#198754")); // success color
+            holder.tvStatus.setTextColor(Color.parseColor("#198754")); 
             holder.layoutActions.setVisibility(View.GONE);
         } else if ("Rejected".equalsIgnoreCase(status)) {
-            holder.tvStatus.setTextColor(Color.parseColor("#DC3545")); // error color
+            holder.tvStatus.setTextColor(Color.parseColor("#DC3545")); 
             holder.layoutActions.setVisibility(View.GONE);
         } else {
-            holder.tvStatus.setTextColor(Color.parseColor("#6C757D")); // gray
+            holder.tvStatus.setTextColor(Color.parseColor("#6C757D")); 
             holder.layoutActions.setVisibility(View.VISIBLE);
         }
 
         holder.btnAccept.setOnClickListener(v -> listener.onAccept(applicant));
         holder.btnReject.setOnClickListener(v -> listener.onReject(applicant));
+        
+        // Nhấn vào toàn bộ item để xem chi tiết
+        holder.itemView.setOnClickListener(v -> listener.onViewDetail(applicant));
     }
 
     private String translateStatus(String status) {

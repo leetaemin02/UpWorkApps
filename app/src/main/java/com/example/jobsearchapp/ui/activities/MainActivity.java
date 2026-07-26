@@ -29,8 +29,26 @@ public class MainActivity extends BaseActivity {
         tvAppName = findViewById(R.id.tvAppName);
         ivProfile = findViewById(R.id.ivProfile);
 
-        // Luôn hiển thị đầy đủ các Tab chức năng cho người dùng
-        bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(true);
+        com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+        String role = sessionManager.getRole();
+        String userId = sessionManager.getUserId();
+
+        // Cập nhật nhãn Profile thành Login nếu chưa đăng nhập nhưng vẫn giữ icon người
+        android.view.MenuItem profileItem = bottomNavigation.getMenu().findItem(R.id.nav_profile);
+        if (userId.isEmpty()) {
+            profileItem.setTitle("Login");
+        } else {
+            profileItem.setTitle("Profile");
+        }
+        profileItem.setIcon(android.R.drawable.ic_menu_myplaces); // Luôn giữ icon người (hoặc icon profile mặc định)
+
+        // Ẩn tab Apps nếu là Nhà tuyển dụng (Employer)
+        if ("employer".equalsIgnoreCase(role)) {
+            bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(false);
+        } else {
+            bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(true);
+        }
+
         bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(true);
 
         if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) == null) {
@@ -66,8 +84,16 @@ public class MainActivity extends BaseActivity {
                 replaceFragment(new AppliedJobsFragment());
                 return true;
             } else if (itemId == R.id.nav_profile) {
-                replaceFragment(new ProfileFragment());
-                return true;
+                com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+                if (sessionManager.getUserId().isEmpty()) {
+                    // Nếu chưa đăng nhập, chuyển hướng sang AuthActivity
+                    android.content.Intent intent = new android.content.Intent(this, AuthActivity.class);
+                    startActivity(intent);
+                    return false; // Không chọn item này trên bottom nav vì ta chuyển activity
+                } else {
+                    replaceFragment(new ProfileFragment());
+                    return true;
+                }
             }
             return false;
         });

@@ -26,6 +26,7 @@ public class AppliedJobsFragment extends BaseFragment {
     private SessionManager sessionManager;
     private FirebaseFirestore db;
     private List<ApplicationWithJob> allApplications = new ArrayList<>();
+    private com.google.firebase.firestore.ListenerRegistration applicationsListener;
 
     @Override
     protected int getLayoutId() {
@@ -53,13 +54,26 @@ public class AppliedJobsFragment extends BaseFragment {
             return;
         }
 
-        db.collection("applications")
+        // Hủy listener cũ nếu có
+        if (applicationsListener != null) {
+            applicationsListener.remove();
+        }
+
+        // Lắng nghe thay đổi danh sách đơn ứng tuyển trong thời gian thực
+        applicationsListener = db.collection("applications")
                 .whereEqualTo("candidateId", userId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    allApplications.clear();
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        showToast("Lỗi lắng nghe dữ liệu: " + e.getMessage());
+                        return;
+                    }
+
+                    if (queryDocumentSnapshots == null) return;
+
+                    List<ApplicationWithJob> updatedList = new ArrayList<>();
                     int total = queryDocumentSnapshots.size();
                     if (total == 0) {
+                        allApplications.clear();
                         adapter.setData(new ArrayList<>());
                         return;
                     }
@@ -78,26 +92,37 @@ public class AppliedJobsFragment extends BaseFragment {
                                     if (jobDoc.exists()) {
                                         item.job = mapDocToJob(jobDoc);
                                     }
-                                    allApplications.add(item);
+                                    updatedList.add(item);
                                     if (counter.incrementAndGet() == total) {
-                                        adapter.setData(allApplications);
+                                        allApplications = new ArrayList<>(updatedList);
+                                        // Sau khi cập nhật allApplications, áp dụng filter hiện tại
+                                        int selectedTab = tabLayout.getSelectedTabPosition();
+                                        filterByStatus(tabLayout.getTabAt(selectedTab).getText().toString());
                                     }
                                 });
                     }
-                })
-                .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
+                });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (applicationsListener != null) {
+            applicationsListener.remove();
+        }
     }
 
     private Job mapDocToJob(com.google.firebase.firestore.DocumentSnapshot doc) {
-        Job job = new Job();
-        job.setId(doc.getId());
-        job.setTitle(doc.getString("title"));
-        job.setCompanyName(doc.getString("companyName"));
-        job.setLocation(doc.getString("location"));
-        job.setDeadlineFromObject(doc.get("deadline"));
-        job.setPostedAtFromObject(doc.get("postedAt"));
-        if (doc.contains("createdAt")) {
-            job.setPostedAtFromObject(doc.get("createdAt"));
+        Job job = doc.toObject(Job.class);
+        if (job != null) {
+            job.setId(doc.getId());
+            // Firestore mapping có thể không xử lý tốt một số field nếu dùng toObject trực tiếp với class này,
+            // nên ta đảm bảo lấy các field quan trọng bằng phương thức an toàn
+            job.setDeadlineFromObject(doc.get("deadline"));
+            job.setPostedAtFromObject(doc.get("postedAt"));
+            if (doc.contains("createdAt")) {
+                job.setPostedAtFromObject(doc.get("createdAt"));
+            }
         }
         return job;
     }
@@ -119,24 +144,34 @@ public class AppliedJobsFragment extends BaseFragment {
     }
 
     private void filterByStatus(String tabText) {
-        String statusFilter;
-        switch (tabText) {
-            case "Đang xem xét": statusFilter = "pending"; break;
-            case "Phỏng vấn": statusFilter = "reviewed"; break;
-            case "Từ chối": statusFilter = "rejected"; break;
-            default: statusFilter = "Tất cả"; break;
+        if ("Tất cả".equals(tabText)) {
+            adapter.setData(allApplications);
+            return;
         }
 
-        if (statusFilter.equals("Tất cả")) {
-            adapter.setData(allApplications);
-        } else {
-            List<ApplicationWithJob> filteredList = new ArrayList<>();
-            for (ApplicationWithJob item : allApplications) {
-                if (item.application.getStatus().equalsIgnoreCase(statusFilter)) {
-                    filteredList.add(item);
-                }
+        List<ApplicationWithJob> filteredList = new ArrayList<>();
+        for (ApplicationWithJob item : allApplications) {
+            String status = item.application.getStatus();
+            if (status == null) continue;
+
+            boolean matches = false;
+            switch (tabText) {
+                case "Đang xem xét":
+                    matches = "pending".equalsIgnoreCase(status);
+                    break;
+                case "Phỏng vấn":
+                    // Phỏng vấn bao gồm cả status 'reviewed' và 'accepted'
+                    matches = "reviewed".equalsIgnoreCase(status) || "accepted".equalsIgnoreCase(status);
+                    break;
+                case "Từ chối":
+                    matches = "rejected".equalsIgnoreCase(status);
+                    break;
             }
-            adapter.setData(filteredList);
+
+            if (matches) {
+                filteredList.add(item);
+            }
         }
+        adapter.setData(filteredList);
     }
 }

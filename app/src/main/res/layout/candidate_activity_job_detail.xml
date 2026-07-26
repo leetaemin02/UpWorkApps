@@ -42,25 +42,11 @@
             app:layout_constraintEnd_toStartOf="@id/ivShare" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Thông báo trạng thái ứng tuyển -->
-    <TextView
-        android:id="@+id/tvAppliedStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
-        android:background="#E3F2FD"
-        android:padding="12dp"
-        android:text="Trạng thái đơn: Đang xem xét"
-        android:textColor="@color/primary"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:visibility="gone" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/tvAppliedStatus"
+        android:layout_below="@id/topBar"
         android:layout_above="@id/btnApplyContainer"
         android:padding="16dp">
 
@@ -145,15 +131,6 @@
                         </LinearLayout>
                     </GridLayout>
 
-                    <TextView
-                        android:id="@+id/tvDetailDeadline"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Hạn nộp: Còn 0 ngày"
-                        android:textColor="#F44336"
-                        android:textSize="12sp"
-                        android:layout_marginTop="12dp"
-                        android:textStyle="bold"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -179,7 +156,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Apply Button -->
+    <!-- Bottom Container for Apply Button and Status -->
     <LinearLayout
         android:id="@+id/btnApplyContainer"
         android:layout_width="match_parent"
@@ -187,7 +164,24 @@
         android:layout_alignParentBottom="true"
         android:background="@color/white"
         android:padding="16dp"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        android:orientation="vertical">
+
+        <!-- Thông báo trạng thái ứng tuyển (Moved to bottom) -->
+        <TextView
+            android:id="@+id/tvAppliedStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#E3F2FD"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:text="Trạng thái đơn: Đang xem xét"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnApplyNow"
             android:layout_width="match_parent"
@@ -196,6 +190,17 @@
             android:textAllCaps="false"
             android:textSize="16sp"
             app:cornerRadius="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewAppliedCv"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Xem CV đã nộp"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            app:cornerRadius="8dp"
+            android:visibility="gone"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
     </LinearLayout>
 
 </RelativeLayout>

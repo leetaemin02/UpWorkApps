@@ -48,25 +48,23 @@ public class AppliedJobAdapter extends RecyclerView.Adapter<AppliedJobAdapter.Vi
         holder.tvAppliedDate.setText("Đã nộp: " + sdf.format(new Date(item.application.getAppliedAt())));
 
         String status = item.application.getStatus();
-        holder.tvStatusBadge.setText(status);
+        if (status == null) status = "pending";
 
-        // Đổi màu badge theo trạng thái
-        switch (status) {
-            case "pending":
-                holder.tvStatusBadge.setText("Đang xem xét");
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#0D6EFD"));
-                break;
+        // Đổi màu badge và dịch sang Tiếng Việt theo trạng thái
+        switch (status.toLowerCase()) {
+            case "accepted":
             case "reviewed":
                 holder.tvStatusBadge.setText("Phỏng vấn");
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#198754"));
+                holder.tvStatusBadge.setTextColor(Color.parseColor("#198754")); // Green
                 break;
             case "rejected":
                 holder.tvStatusBadge.setText("Từ chối");
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#DC3545"));
+                holder.tvStatusBadge.setTextColor(Color.parseColor("#DC3545")); // Red
                 break;
-            case "accepted":
-                holder.tvStatusBadge.setText("Đã nhận");
-                holder.tvStatusBadge.setTextColor(Color.parseColor("#198754"));
+            case "pending":
+            default:
+                holder.tvStatusBadge.setText("Đang xem xét");
+                holder.tvStatusBadge.setTextColor(Color.parseColor("#0D6EFD")); // Blue
                 break;
         }
 
@@ -74,7 +72,7 @@ public class AppliedJobAdapter extends RecyclerView.Adapter<AppliedJobAdapter.Vi
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), JobDetailActivity.class);
             intent.putExtra("JOB_DATA", item.job);
-            intent.putExtra("APP_STATUS", status); // Truyền thêm trạng thái
+            intent.putExtra("APPLICATION_DATA", item.application);
             v.getContext().startActivity(intent);
         });
     }

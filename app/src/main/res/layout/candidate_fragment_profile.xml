@@ -273,12 +273,66 @@
                         android:padding="12dp"
                         android:gravity="center_vertical"
                         android:visibility="gone">
-                        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/ic_menu_edit" app:tint="#E53935"/>
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
-                            <TextView android:id="@+id/tvCvName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Chưa có CV" android:textStyle="bold" android:textSize="13sp"/>
-                            <TextView android:id="@+id/tvCvDate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Vừa mới cập nhật" android:textSize="11sp" android:textColor="@color/text_sub"/>
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_edit"
+                            app:tint="#E53935"/>
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/tvCvName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="My_CV.pdf"
+                                android:textStyle="bold"
+                                android:textSize="13sp"
+                                android:maxLines="1"
+                                android:ellipsize="end"/>
+                            <TextView
+                                android:id="@+id/tvCvDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Nhấn để xem hoặc tải về"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_sub"/>
                         </LinearLayout>
+                        <ImageView
+                            android:id="@+id/ivDeleteCv"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_delete"
+                            app:tint="@color/error"
+                            android:padding="2dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackgroundBorderless"/>
                     </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardSavedJobs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/btn_star_big_on" app:tint="@color/yellow_star"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Công việc đã lưu" android:layout_marginStart="16dp" android:textStyle="bold" android:textSize="14sp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

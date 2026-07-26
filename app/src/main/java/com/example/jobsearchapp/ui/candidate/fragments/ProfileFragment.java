@@ -117,11 +117,30 @@ public class ProfileFragment extends BaseFragment {
 
         if (currentUser.getCvPath() != null && !currentUser.getCvPath().isEmpty()) {
             layoutCvItem.setVisibility(View.VISIBLE);
-            tvCvName.setText(currentUser.getCvPath());
+            tvCvName.setText("My_CV.pdf");
         } else {
-            tvCvName.setText("Chưa có CV (Nhấn để chọn CV)");
+            layoutCvItem.setVisibility(View.GONE);
         }
         loadSkills(currentUser.getSkills());
+    }
+
+    private void deleteCV() {
+        if (currentUser == null) return;
+        
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Xóa CV")
+            .setMessage("Bạn có chắc chắn muốn xóa CV này?")
+            .setPositiveButton("Xóa", (dialog, which) -> {
+                db.collection("users").document(currentUser.getId())
+                    .update("cvPath", "")
+                    .addOnSuccessListener(aVoid -> {
+                        showToast("Đã xóa CV");
+                        currentUser.setCvPath("");
+                        layoutCvItem.setVisibility(View.GONE);
+                    });
+            })
+            .setNegativeButton("Hủy", null)
+            .show();
     }
 
     private void loadSkills(String skillsStr) {
@@ -193,21 +212,21 @@ public class ProfileFragment extends BaseFragment {
         if (getView() == null) return;
 
         getView().findViewById(R.id.btnGoToAuth).setOnClickListener(v -> startActivity(new Intent(getActivity(), AuthActivity.class)));
-        getView().findViewById(R.id.btnUploadCV).setOnClickListener(v -> cvPickerLauncher.launch("*/*"));
+        getView().findViewById(R.id.btnUploadCV).setOnClickListener(v -> cvPickerLauncher.launch("application/pdf"));
 
+        View ivDeleteCv = getView().findViewById(R.id.ivDeleteCv);
+        if (ivDeleteCv != null) {
+            ivDeleteCv.setOnClickListener(v -> deleteCV());
+        }
 
         layoutCvItem.setOnClickListener(v -> {
             if (currentUser != null && currentUser.getCvPath() != null && !currentUser.getCvPath().isEmpty()) {
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Thông tin CV")
-                        .setMessage("CV hiện tại: " + currentUser.getCvPath())
-                        .setPositiveButton("Đóng", null)
-                        .setNeutralButton("Tải CV khác", (dialog, which) -> {
-                            cvPickerLauncher.launch("*/*");
-                        })
-                        .show();
-            } else {
-                showToast("Chưa có CV nào được tải lên");
+                try {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(currentUser.getCvPath()));
+                    startActivity(browserIntent);
+                } catch (Exception e) {
+                    showToast("Không thể mở CV: " + e.getMessage());
+                }
             }
         });
 
@@ -219,6 +238,11 @@ public class ProfileFragment extends BaseFragment {
         getView().findViewById(R.id.cardManageJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), ManageJobsActivity.class)));
         getView().findViewById(R.id.cardApplicants).setOnClickListener(v -> startActivity(new Intent(getActivity(), ViewApplicantsActivity.class)));
         getView().findViewById(R.id.btnLogoutEmployer).setOnClickListener(v -> logout());
+
+        View cardSavedJobs = getView().findViewById(R.id.cardSavedJobs);
+        if (cardSavedJobs != null) {
+            cardSavedJobs.setOnClickListener(v -> startActivity(new Intent(getActivity(), com.example.jobsearchapp.ui.activities.SavedJobsActivity.class)));
+        }
     }
 
     private void showSkillDialog() {
@@ -236,6 +260,12 @@ public class ProfileFragment extends BaseFragment {
 
     private void logout() {
         sessionManager.logout();
-        checkLoginStatus();
+        if (getActivity() != null) {
+            // Khởi động lại MainActivity để xóa sạch trạng thái cũ và hiển thị đầy đủ 4 tab cho ứng viên/khách
+            Intent intent = new Intent(getActivity(), com.example.jobsearchapp.ui.activities.MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        }
     }
 }

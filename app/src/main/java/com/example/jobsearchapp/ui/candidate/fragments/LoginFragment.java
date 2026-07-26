@@ -57,6 +57,13 @@ public class LoginFragment extends BaseFragment {
                     .addToBackStack(null)
                     .commit();
         });
+
+        getView().findViewById(R.id.btnBackToGuest).setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            if (getActivity() != null) getActivity().finish();
+        });
     }
 
     private void fetchUserAndNavigate(String uid) {

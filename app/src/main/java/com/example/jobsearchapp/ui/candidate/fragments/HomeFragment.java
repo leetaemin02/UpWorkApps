@@ -29,6 +29,7 @@ public class HomeFragment extends BaseFragment {
     private ChipGroup cgTrending;
     private EditText edtSearch;
     private TextView tvViewAllCategories;
+    private android.widget.ProgressBar pbHome;
     private FirebaseFirestore db;
     private JobAdapter jobAdapter;
     private CategoryAdapter categoryAdapter;
@@ -47,6 +48,7 @@ public class HomeFragment extends BaseFragment {
         cgTrending = view.findViewById(R.id.cgTrending);
         edtSearch = view.findViewById(R.id.edtSearch);
         tvViewAllCategories = view.findViewById(R.id.tvViewAllCategories);
+        pbHome = view.findViewById(R.id.pbHome);
 
         db = FirebaseFirestore.getInstance();
         
@@ -54,6 +56,31 @@ public class HomeFragment extends BaseFragment {
         setupRecyclerView();
         setupTrendingKeywords();
         loadJobsFromFirebase();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadSavedJobs();
+    }
+
+    private void loadSavedJobs() {
+        com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(getContext());
+        String userId = sessionManager.getUserId();
+        if (userId.isEmpty()) return;
+
+        db.collection("saved_jobs")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    java.util.Set<String> savedIds = new java.util.HashSet<>();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        savedIds.add(doc.getString("jobId"));
+                    }
+                    if (jobAdapter != null) {
+                        jobAdapter.setSavedJobIds(savedIds);
+                    }
+                });
     }
 
     private void setupCategories() {
@@ -77,6 +104,7 @@ public class HomeFragment extends BaseFragment {
             chip.setChipStrokeColorResource(R.color.gray_border);
             chip.setOnClickListener(v -> {
                 if (getActivity() instanceof MainActivity) {
+                    // Truyền keyword sang trang search
                     ((MainActivity) getActivity()).navigateToSearch(keyword);
                 }
             });
@@ -91,11 +119,13 @@ public class HomeFragment extends BaseFragment {
     }
 
     private void loadJobsFromFirebase() {
+        if (pbHome != null) pbHome.setVisibility(View.VISIBLE);
         db.collection("jobs")
                 .orderBy("postedAt", Query.Direction.DESCENDING)
-                .limit(50) // Tăng giới hạn để lấy được nhiều danh mục hơn
+                .limit(50) 
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (pbHome != null) pbHome.setVisibility(View.GONE);
                     jobList.clear();
                     java.util.Set<String> uniqueCategories = new java.util.HashSet<>();
                     
@@ -110,6 +140,9 @@ public class HomeFragment extends BaseFragment {
                     
                     updateCategoryUI(uniqueCategories);
                     jobAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> {
+                    if (pbHome != null) pbHome.setVisibility(View.GONE);
                 });
     }
 
@@ -155,27 +188,32 @@ public class HomeFragment extends BaseFragment {
 
     private void updateCategoryUI(java.util.Set<String> categories) {
         categoryList.clear();
+        int count = 0;
         for (String catName : categories) {
+            if (count >= 4) break; // Tối đa 4 danh mục ở trang Home
             int iconRes = getIconForCategory(catName);
             categoryList.add(new Category(catName, iconRes));
+            count++;
         }
         categoryAdapter.notifyDataSetChanged();
     }
 
     private int getIconForCategory(String category) {
         String lower = category.toLowerCase();
-        if (lower.contains("it") || lower.contains("công nghệ") || lower.contains("phần mềm")) 
+        if (lower.contains("it") || lower.contains("công nghệ") || lower.contains("phần mềm") || lower.contains("máy tính")) 
             return android.R.drawable.ic_menu_today;
         if (lower.contains("marketing") || lower.contains("tiếp thị")) 
             return android.R.drawable.ic_menu_send;
-        if (lower.contains("kinh doanh") || lower.contains("sales")) 
+        if (lower.contains("kinh doanh") || lower.contains("sales") || lower.contains("bán hàng")) 
             return android.R.drawable.ic_menu_agenda;
-        if (lower.contains("thiết kế") || lower.contains("design")) 
+        if (lower.contains("thiết kế") || lower.contains("design") || lower.contains("ux")) 
             return android.R.drawable.ic_menu_edit;
         if (lower.contains("nhân sự") || lower.contains("hr")) 
             return android.R.drawable.ic_menu_myplaces;
-        if (lower.contains("kế toán") || lower.contains("tài chính")) 
+        if (lower.contains("kế toán") || lower.contains("tài chính") || lower.contains("phân tích")) 
             return android.R.drawable.ic_menu_view;
+        if (lower.contains("an toàn") || lower.contains("bảo mật"))
+            return android.R.drawable.ic_lock_lock;
         
         return android.R.drawable.ic_menu_directions; // Icon mặc định
     }

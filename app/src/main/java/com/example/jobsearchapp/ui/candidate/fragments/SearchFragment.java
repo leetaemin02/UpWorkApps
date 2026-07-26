@@ -72,8 +72,33 @@ public class SearchFragment extends BaseFragment {
         loadJobsFromFirebase();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadSavedJobs();
+    }
+
+    private void loadSavedJobs() {
+        com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(getContext());
+        String userId = sessionManager.getUserId();
+        if (userId.isEmpty()) return;
+
+        db.collection("saved_jobs")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    java.util.Set<String> savedIds = new java.util.HashSet<>();
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        savedIds.add(doc.getString("jobId"));
+                    }
+                    if (adapter != null) {
+                        adapter.setSavedJobIds(savedIds);
+                    }
+                });
+    }
+
     private void populateCategoryChips(java.util.Set<String> categories) {
-        if (cgCategories == null) return;
+        if (cgCategories == null || getContext() == null) return;
         cgCategories.removeAllViews();
         
         int[][] states = new int[][] {
@@ -83,39 +108,47 @@ public class SearchFragment extends BaseFragment {
 
         for (String category : categories) {
             if (category == null || category.isEmpty()) continue;
-            Chip chip = new Chip(getContext());
+            Chip chip = new Chip(requireContext());
             chip.setText(category);
             chip.setCheckable(true);
             chip.setClickable(true);
-            
+
             // Hiệu ứng Tick và màu sắc khi chọn
             chip.setCheckedIconVisible(true);
-            
+
             // Màu nền: Xanh nhạt khi chọn, Trắng khi không chọn
             int[] bgColors = new int[] {
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary_light),
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.white)
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.primary_light),
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.white)
             };
             chip.setChipBackgroundColor(new android.content.res.ColorStateList(states, bgColors));
-            
+
             // Màu viền: Xanh đậm khi chọn, Xám khi không chọn
             int[] strokeColors = new int[] {
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary),
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.gray_border)
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.primary),
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.gray_border)
             };
             chip.setChipStrokeColor(new android.content.res.ColorStateList(states, strokeColors));
             chip.setChipStrokeWidth(2f);
 
             // Màu chữ: Xanh đậm khi chọn, Đen khi không chọn
             int[] textColors = new int[] {
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.primary),
-                androidx.core.content.ContextCompat.getColor(getContext(), R.color.text_main)
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.primary),
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.text_main)
             };
             chip.setTextColor(new android.content.res.ColorStateList(states, textColors));
             
+            // Tự động tích chọn nếu danh mục này trùng với query từ Home
+            if (initialQuery != null && initialQuery.equalsIgnoreCase(category)) {
+                chip.setChecked(true);
+                if (!selectedCategories.contains(category)) {
+                    selectedCategories.add(category);
+                }
+            }
+
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    selectedCategories.add(category);
+                    if (!selectedCategories.contains(category)) selectedCategories.add(category);
                 } else {
                     selectedCategories.remove(category);
                 }
@@ -173,7 +206,7 @@ public class SearchFragment extends BaseFragment {
     }
 
     private void updatePaginationUI() {
-        if (layoutPagination == null) return;
+        if (layoutPagination == null || getContext() == null) return;
         layoutPagination.removeAllViews();
         
         int totalPages = (int) Math.ceil((double) filteredJobs.size() / PAGE_SIZE);
@@ -232,6 +265,7 @@ public class SearchFragment extends BaseFragment {
     }
 
     private void addDots() {
+        if (getContext() == null) return;
         TextView tv = new TextView(getContext());
         tv.setText("...");
         tv.setPadding(12, 0, 12, 0);
@@ -240,6 +274,7 @@ public class SearchFragment extends BaseFragment {
     }
 
     private void addPageButton(String text, boolean isSelected, Runnable onClick) {
+        if (getContext() == null) return;
         TextView btn = new TextView(getContext());
         int size = (int) (38 * getResources().getDisplayMetrics().density);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
@@ -411,18 +446,24 @@ public class SearchFragment extends BaseFragment {
                         allJobs.add(mapDocToJob(doc));
                     }
                     
+                    boolean matchedCategory = false;
                     for (Job job : allJobs) {
                         if (job.getCategory() != null && !job.getCategory().isEmpty()) {
                             uniqueCategories.add(job.getCategory());
+                            if (initialQuery != null && initialQuery.equalsIgnoreCase(job.getCategory())) {
+                                matchedCategory = true;
+                            }
                         }
                     }
                     
                     populateCategoryChips(uniqueCategories);
-                    performSearch();
                     
-                    if (initialQuery != null && edtSearch != null) {
+                    // Nếu là danh mục thì không hiện lên ô search, nếu là từ khóa thường thì hiện để lọc
+                    if (initialQuery != null && !matchedCategory && edtSearch != null) {
                         edtSearch.setText(initialQuery);
                     }
+                    
+                    performSearch();
                 });
     }
 
@@ -443,6 +484,7 @@ public class SearchFragment extends BaseFragment {
         job.setLocation(doc.getString("location"));
         job.setJobType(doc.getString("jobType"));
         job.setCategory(doc.getString("category"));
+        job.setExperienceRequired(doc.getString("experienceRequired"));
         job.setStatus(doc.getString("status"));
         
         job.setDeadlineFromObject(doc.get("deadline"));

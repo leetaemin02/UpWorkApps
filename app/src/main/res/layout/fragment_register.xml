@@ -141,15 +141,6 @@
             android:drawablePadding="12dp"
             android:layout_marginBottom="16dp"/>
 
-        <CheckBox
-            android:id="@+id/cbTerms"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tôi đồng ý với các Điều khoản dịch vụ và Chính sách bảo mật của CareerLaunch."
-            android:textSize="13sp"
-            android:layout_marginBottom="24dp"
-            android:textColor="@color/text_sub"/>
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"

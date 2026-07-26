@@ -4,18 +4,27 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.SavedJob;
+import com.example.jobsearchapp.ui.activities.AuthActivity;
 import com.example.jobsearchapp.ui.activities.JobDetailActivity;
+import com.example.jobsearchapp.utils.FormatUtils;
+import com.example.jobsearchapp.utils.SessionManager;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
@@ -24,10 +33,19 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
     private List<Job> jobList;
     private List<Job> jobListFull;
+    private Set<String> savedJobIds = new HashSet<>();
+    private FirebaseFirestore db;
+    private SessionManager sessionManager;
 
     public JobAdapter(List<Job> jobList) {
         this.jobList = jobList;
         this.jobListFull = new ArrayList<>(jobList);
+        this.db = FirebaseFirestore.getInstance();
+    }
+
+    public void setSavedJobIds(Set<String> savedJobIds) {
+        this.savedJobIds = savedJobIds;
+        notifyDataSetChanged();
     }
 
     public void sort(boolean newestFirst) {
@@ -54,7 +72,7 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
-        // Bỏ logic đề xuất, luôn trả về kiểu bình thường để giao diện đồng nhất
+        // Luôn trả về kiểu bình thường để giao diện đồng nhất
         return TYPE_REGULAR;
     }
 
@@ -75,11 +93,63 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
         holder.tvTitle.setText(job.getTitle());
 
-        holder.tvSalary.setText(job.getSalaryMin() + " - " + job.getSalaryMax());
+        holder.tvSalary.setText(FormatUtils.formatSalaryRange(job.getSalaryMin(), job.getSalaryMax()));
 
         holder.tvLocation.setText(job.getLocation());
 
         holder.tvCompanyName.setText(job.getCompanyName());
+
+        if (holder.tvCategory != null) {
+            holder.tvCategory.setText(job.getCategory() != null ? job.getCategory() : "Khác");
+        }
+
+        if (holder.tvExp != null) {
+            holder.tvExp.setText(job.getExperienceRequired() != null ? job.getExperienceRequired() : "Không yêu cầu");
+        }
+
+        // Bookmark Logic
+        if (sessionManager == null) {
+            sessionManager = new SessionManager(holder.itemView.getContext());
+        }
+
+        boolean isSaved = savedJobIds.contains(job.getId());
+        holder.ivBookmark.setImageResource(isSaved ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
+
+        holder.ivBookmark.setOnClickListener(v -> {
+            String userId = sessionManager.getUserId();
+            String role = sessionManager.getRole();
+
+            if (userId.isEmpty()) {
+                // Chưa đăng nhập -> Chuyển sang Auth
+                v.getContext().startActivity(new Intent(v.getContext(), AuthActivity.class));
+                return;
+            }
+
+            if (!"candidate".equalsIgnoreCase(role)) {
+                // Đã đăng nhập nhưng không phải ứng viên
+                Toast.makeText(v.getContext(), "Vui lòng đăng nhập tài khoản Ứng viên để sử dụng chức năng này", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Xử lý lưu/bỏ lưu
+            String docId = userId + "_" + job.getId();
+            if (!isSaved) {
+                SavedJob savedJob = new SavedJob(userId, job.getId());
+                db.collection("saved_jobs").document(docId).set(savedJob)
+                        .addOnSuccessListener(aVoid -> {
+                            savedJobIds.add(job.getId());
+                            notifyItemChanged(position);
+                            Toast.makeText(v.getContext(), "Đã lưu công việc", Toast.LENGTH_SHORT).show();
+                        });
+            } else {
+                db.collection("saved_jobs").document(docId).delete()
+                        .addOnSuccessListener(aVoid -> {
+                            savedJobIds.remove(job.getId());
+                            notifyItemChanged(position);
+                            Toast.makeText(v.getContext(), "Đã bỏ lưu", Toast.LENGTH_SHORT).show();
+                        });
+            }
+        });
 
         android.widget.ImageView ivCompanyLogo = holder.itemView.findViewById(R.id.ivCompanyLogo);
         if (ivCompanyLogo != null) {
@@ -145,6 +215,9 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
         TextView tvSalary;
         TextView tvLocation;
         TextView tvCompanyName;
+        TextView tvCategory;
+        TextView tvExp;
+        ImageView ivBookmark;
 
         public JobViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -153,6 +226,9 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
             tvSalary = itemView.findViewById(R.id.tvJobSalary);
             tvLocation = itemView.findViewById(R.id.tvJobLocation);
             tvCompanyName = itemView.findViewById(R.id.tvCompanyName);
+            tvCategory = itemView.findViewById(R.id.tvJobCategory);
+            tvExp = itemView.findViewById(R.id.tvJobExp);
+            ivBookmark = itemView.findViewById(R.id.ivBookmark);
         }
     }
 }

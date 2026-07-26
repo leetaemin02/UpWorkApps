@@ -99,7 +99,9 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
                                                     applicant.setId(userTask.getResult().getId());
                                                     applicant.setName(user.getFullName());
                                                     applicant.setEmail(user.getEmail());
+                                                    applicant.setCvUrl(app.getCvUrl()); // Lấy URL CV từ đơn ứng tuyển
                                                     applicant.setJobTitle(job != null ? job.getTitle() : "N/A");
+                                                    applicant.setJobId(app.getJobId());
                                                     applicant.setStatus(app.getStatus());
                                                     applicants.add(applicant);
                                                 }
@@ -136,6 +138,13 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
     @Override
     public void onReject(Applicant applicant) {
         updateApplicationStatus(applicant.getApplicationId(), "Rejected");
+    }
+
+    @Override
+    public void onViewDetail(Applicant applicant) {
+        android.content.Intent intent = new android.content.Intent(this, ApplicantDetailActivity.class);
+        intent.putExtra("APPLICANT_DATA", applicant);
+        startActivity(intent);
     }
 
     private void updateApplicationStatus(String applicationId, String status) {
