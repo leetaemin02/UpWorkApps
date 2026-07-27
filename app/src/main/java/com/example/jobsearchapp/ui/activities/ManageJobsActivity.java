@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.ui.employer.adapters.ManageJobAdapter;
 import com.example.jobsearchapp.utils.SessionManager;
@@ -117,9 +118,21 @@ public class ManageJobsActivity extends BaseActivity implements ManageJobAdapter
 
     @Override
     public void onDelete(Job job) {
+        String jobTitle = job.getTitle();
         db.collection("jobs").document(job.getId())
             .delete()
             .addOnSuccessListener(aVoid -> {
+                // Thông báo cho nhà tuyển dụng
+                Notification notif = new Notification(
+                        sessionManager.getUserId(),
+                        "Xóa tin thành công",
+                        "Bạn đã xóa tin tuyển dụng vị trí " + jobTitle + " thành công",
+                        "system",
+                        null,
+                        null
+                );
+                db.collection("notifications").add(notif);
+
                 showToast("Đã xóa tin tuyển dụng");
                 loadJobs();
             })

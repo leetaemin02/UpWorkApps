@@ -9,9 +9,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.jobsearchapp.R;
+import com.example.jobsearchapp.data.models.Applicant;
 import com.example.jobsearchapp.data.models.Application;
 import com.example.jobsearchapp.data.models.Job;
 import com.example.jobsearchapp.data.models.Notification;
+import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.ui.candidate.adapters.NotificationAdapter;
 import com.example.jobsearchapp.utils.SessionManager;
@@ -94,47 +96,94 @@ public class NotificationActivity extends BaseActivity implements NotificationAd
             db.collection("notifications").document(notification.getNotificationId()).update("read", true);
         }
 
-        // 2. Chuyển hướng đến trang chi tiết công việc
-        if (notification.getJobId() != null && notification.getApplicationId() != null) {
-            pbNotifications.setVisibility(View.VISIBLE);
-            
-            // Tải Job
-            db.collection("jobs").document(notification.getJobId()).get()
-                    .addOnSuccessListener(jobDoc -> {
-                        if (jobDoc.exists()) {
-                            Job job = jobDoc.toObject(Job.class);
-                            if (job != null) job.setId(jobDoc.getId());
+        String role = sessionManager.getRole();
 
-                            // Tải Application (Đơn ứng tuyển)
-                            db.collection("applications").document(notification.getApplicationId()).get()
-                                    .addOnSuccessListener(appDoc -> {
-                                        pbNotifications.setVisibility(View.GONE);
-                                        if (appDoc.exists()) {
-                                            Application app = appDoc.toObject(Application.class);
-                                            if (app != null) app.setId(appDoc.getId());
-
-                                            // Mở trang chi tiết với đầy đủ 2 khối dữ liệu
-                                            Intent intent = new Intent(this, JobDetailActivity.class);
-                                            intent.putExtra("JOB_DATA", job);
-                                            intent.putExtra("APPLICATION_DATA", app);
-                                            startActivity(intent);
-                                        } else {
-                                            // Fallback nếu đơn đã bị xóa nhưng job vẫn còn
-                                            Intent intent = new Intent(this, JobDetailActivity.class);
-                                            intent.putExtra("JOB_DATA", job);
-                                            startActivity(intent);
-                                        }
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        pbNotifications.setVisibility(View.GONE);
-                                        showToast("Lỗi tải thông tin đơn");
-                                    });
-                        } else {
-                            pbNotifications.setVisibility(View.GONE);
-                            showToast("Công việc này không còn tồn tại");
-                        }
-                    });
+        // 2. Chuyển hướng thông minh dựa trên Role và Loại thông báo
+        if ("employer".equalsIgnoreCase(role) && "application".equalsIgnoreCase(notification.getType())) {
+            // TRƯỜNG HỢP: Nhà tuyển dụng nhấn vào "Ứng viên mới" -> Xem Chi tiết ứng viên
+            navigateToApplicantDetail(notification);
+        } else {
+            // TRƯỜNG HỢP: Các loại khác (Đăng tin/Sửa tin của NTD, hoặc Thông báo của Ứng viên)
+            navigateToJobDetail(notification);
         }
+    }
+
+    private void navigateToApplicantDetail(Notification notification) {
+        if (notification.getApplicationId() == null) return;
+        pbNotifications.setVisibility(View.VISIBLE);
+
+        db.collection("applications").document(notification.getApplicationId()).get()
+            .addOnSuccessListener(appDoc -> {
+                if (appDoc.exists()) {
+                    Application app = appDoc.toObject(Application.class);
+                    if (app == null) { pbNotifications.setVisibility(View.GONE); return; }
+                    
+                    db.collection("users").document(app.getCandidateId()).get()
+                        .addOnSuccessListener(userDoc -> {
+                            if (userDoc.exists()) {
+                                User user = userDoc.toObject(User.class);
+                                if (user != null) {
+                                    Applicant applicant = new Applicant();
+                                    applicant.setApplicationId(appDoc.getId());
+                                    applicant.setId(userDoc.getId());
+                                    applicant.setName(user.getFullName());
+                                    applicant.setEmail(user.getEmail());
+                                    applicant.setCvUrl(app.getCvUrl());
+                                    applicant.setAvatarUrl(app.getCandidateAvatarUrl());
+                                    applicant.setJobTitle(app.getJobTitle());
+                                    applicant.setJobId(app.getJobId());
+                                    applicant.setStatus(app.getStatus());
+
+                                    Intent intent = new Intent(this, ApplicantDetailActivity.class);
+                                    intent.putExtra("APPLICANT_DATA", applicant);
+                                    startActivity(intent);
+                                }
+                            }
+                            pbNotifications.setVisibility(View.GONE);
+                        });
+                } else {
+                    pbNotifications.setVisibility(View.GONE);
+                    showToast("Đơn ứng tuyển này không còn tồn tại");
+                }
+            });
+    }
+
+    private void navigateToJobDetail(Notification notification) {
+        if (notification.getJobId() == null) return;
+        pbNotifications.setVisibility(View.VISIBLE);
+
+        db.collection("jobs").document(notification.getJobId()).get()
+            .addOnSuccessListener(jobDoc -> {
+                if (jobDoc.exists()) {
+                    Job job = jobDoc.toObject(Job.class);
+                    if (job != null) job.setId(jobDoc.getId());
+
+                    if (notification.getApplicationId() != null) {
+                        // Tải thêm Đơn ứng tuyển nếu có (Dành cho Ứng viên xem kết quả)
+                        db.collection("applications").document(notification.getApplicationId()).get()
+                            .addOnSuccessListener(appDoc -> {
+                                pbNotifications.setVisibility(View.GONE);
+                                Intent intent = new Intent(this, JobDetailActivity.class);
+                                intent.putExtra("JOB_DATA", job);
+                                if (appDoc.exists()) {
+                                    Application app = appDoc.toObject(Application.class);
+                                    if (app != null) app.setId(appDoc.getId());
+                                    intent.putExtra("APPLICATION_DATA", app);
+                                }
+                                startActivity(intent);
+                            });
+                    } else {
+                        // Chỉ xem Chi tiết công việc (Dành cho NTD xem tin vừa đăng/sửa)
+                        pbNotifications.setVisibility(View.GONE);
+                        Intent intent = new Intent(this, JobDetailActivity.class);
+                        intent.putExtra("JOB_DATA", job);
+                        startActivity(intent);
+                    }
+                } else {
+                    pbNotifications.setVisibility(View.GONE);
+                    showToast("Công việc này không còn tồn tại");
+                }
+            });
     }
 
     private void markAllAsRead() {

@@ -4,6 +4,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import com.example.jobsearchapp.R;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.utils.DataSeedHelper;
 import com.example.jobsearchapp.utils.SessionManager;
@@ -118,6 +119,17 @@ public class PostJobActivity extends BaseActivity {
             db.collection("jobs")
                 .add(job)
                 .addOnSuccessListener(documentReference -> {
+                    // Thông báo cho nhà tuyển dụng
+                    Notification notif = new Notification(
+                            userId,
+                            "Đăng tin thành công",
+                            "Bạn đã đăng tin tuyển dụng vị trí " + jobTitle + " thành công",
+                            "system",
+                            documentReference.getId(),
+                            null
+                    );
+                    db.collection("notifications").add(notif);
+
                     showToast("Đăng tin thành công!");
                     finish();
                 })

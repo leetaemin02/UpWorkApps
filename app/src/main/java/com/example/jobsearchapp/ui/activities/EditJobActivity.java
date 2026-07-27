@@ -5,7 +5,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.ui.base.BaseActivity;
+import com.example.jobsearchapp.utils.SessionManager;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,7 @@ public class EditJobActivity extends BaseActivity {
     private Button btnUpdate;
     private ImageView ivBack;
     private FirebaseFirestore db;
+    private SessionManager sessionManager;
     private Job currentJob;
 
     @Override
@@ -42,6 +45,7 @@ public class EditJobActivity extends BaseActivity {
         ivBack = findViewById(R.id.ivBack);
 
         db = FirebaseFirestore.getInstance();
+        sessionManager = new SessionManager(this);
         
         currentJob = (Job) getIntent().getSerializableExtra("JOB_DATA");
         if (currentJob != null) {
@@ -123,6 +127,17 @@ public class EditJobActivity extends BaseActivity {
             db.collection("jobs").document(currentJob.getId())
                 .update(updates)
                 .addOnSuccessListener(aVoid -> {
+                    // Thông báo cho nhà tuyển dụng
+                    Notification notif = new Notification(
+                            sessionManager.getUserId(),
+                            "Cập nhật tin thành công",
+                            "Bạn đã cập nhật tin tuyển dụng vị trí " + title + " thành công",
+                            "system",
+                            currentJob.getId(),
+                            null
+                    );
+                    db.collection("notifications").add(notif);
+
                     showToast("Cập nhật tin thành công");
                     finish();
                 })

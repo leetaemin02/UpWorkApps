@@ -382,8 +382,8 @@ public class JobDetailActivity extends BaseActivity {
         db.collection("applications")
                 .add(app)
                 .addOnSuccessListener(documentReference -> {
-                    // Tạo thông báo cho Ứng viên
-                    Notification notif = new Notification(
+                    // 1. Tạo thông báo cho Ứng viên (Xác nhận nộp đơn)
+                    Notification notifCandidate = new Notification(
                             userId,
                             "Nộp đơn thành công",
                             "Bạn đã nộp đơn thành công vào vị trí " + job.getTitle(),
@@ -391,10 +391,22 @@ public class JobDetailActivity extends BaseActivity {
                             job.getId(),
                             documentReference.getId()
                     );
-                    db.collection("notifications").add(notif);
+                    db.collection("notifications").add(notifCandidate);
+
+                    // 2. Tạo thông báo cho Nhà tuyển dụng (Có ứng viên mới)
+                    if (job.getEmployerId() != null && !job.getEmployerId().isEmpty()) {
+                        Notification notifEmployer = new Notification(
+                                job.getEmployerId(),
+                                "Ứng viên mới",
+                                "Ứng viên " + userName + " đã nộp đơn vào vị trí " + job.getTitle(),
+                                "application",
+                                job.getId(),
+                                documentReference.getId()
+                        );
+                        db.collection("notifications").add(notifEmployer);
+                    }
 
                     showToast("Đã gửi yêu cầu ứng tuyển thành công!");
-                    // Không thay đổi giao diện sau khi nộp, giữ nguyên nút nộp hồ sơ
                 })
                 .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
     }
