@@ -40,6 +40,7 @@ public class SearchFragment extends BaseFragment {
     private List<Job> filteredJobs = new ArrayList<>();
     private int currentPage = 1;
     private final int PAGE_SIZE = 10;
+    private String currentSortType = "newest"; // "newest", "oldest", "salary_asc", "salary_desc"
 
     @Override
     protected int getLayoutId() {
@@ -186,9 +187,31 @@ public class SearchFragment extends BaseFragment {
             }
         }
 
+        // Áp dụng sắp xếp cho danh sách đã lọc
+        applySortToFilteredList();
+
         updateResultCount(filteredJobs.size());
         updatePaginationUI();
         displayCurrentPage();
+    }
+
+    private void applySortToFilteredList() {
+        if (filteredJobs.isEmpty()) return;
+
+        java.util.Collections.sort(filteredJobs, (j1, j2) -> {
+            switch (currentSortType) {
+                case "newest":
+                    return Long.compare(j2.getPostedAt(), j1.getPostedAt());
+                case "oldest":
+                    return Long.compare(j1.getPostedAt(), j2.getPostedAt());
+                case "salary_asc":
+                    return Long.compare(j1.getSalaryMin(), j2.getSalaryMin());
+                case "salary_desc":
+                    return Long.compare(j2.getSalaryMin(), j1.getSalaryMin());
+                default:
+                    return 0;
+            }
+        });
     }
 
     private void displayCurrentPage() {
@@ -381,10 +404,9 @@ public class SearchFragment extends BaseFragment {
             if (title.equals("-----------------")) return false;
 
             if (title.contains("Lương:")) {
-                if (adapter != null) {
-                    adapter.sortBySalary(title.contains("Thấp đến Cao"));
-                    displayCurrentPage();
-                }
+                currentSortType = title.contains("Thấp đến Cao") ? "salary_asc" : "salary_desc";
+                currentPage = 1;
+                performSearch();
             } else {
                 tvSalaryFilter.setText(title + " ▼");
                 if (title.equals("Tất cả mức lương")) {
@@ -412,10 +434,9 @@ public class SearchFragment extends BaseFragment {
         popup.setOnMenuItemClickListener(item -> {
             String title = item.getTitle().toString();
             tvSort.setText(title + " ▼");
-            if (adapter != null) {
-                adapter.sort(title.equals("Mới nhất"));
-                displayCurrentPage();
-            }
+            currentSortType = title.equals("Mới nhất") ? "newest" : "oldest";
+            currentPage = 1;
+            performSearch();
             return true;
         });
         popup.show();

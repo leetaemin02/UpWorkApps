@@ -29,7 +29,7 @@ public class HomeFragment extends BaseFragment {
     private RecyclerView rvJobsMain, rvCategories;
     private ChipGroup cgTrending;
     private EditText edtSearch;
-    private TextView tvViewAllCategories;
+    private TextView tvViewAllCategories, tvViewMoreSuggestions;
     private android.widget.ProgressBar pbHome;
     private FirebaseFirestore db;
     private JobAdapter jobAdapter;
@@ -49,6 +49,7 @@ public class HomeFragment extends BaseFragment {
         cgTrending = view.findViewById(R.id.cgTrending);
         edtSearch = view.findViewById(R.id.edtSearch);
         tvViewAllCategories = view.findViewById(R.id.tvViewAllCategories);
+        tvViewMoreSuggestions = view.findViewById(R.id.tvViewMoreSuggestions);
         pbHome = view.findViewById(R.id.pbHome);
 
         db = FirebaseFirestore.getInstance();
@@ -142,6 +143,13 @@ public class HomeFragment extends BaseFragment {
                     
                     // Sắp xếp theo postedAt mới nhất
                     Collections.sort(jobList, (j1, j2) -> Long.compare(j2.getPostedAt(), j1.getPostedAt()));
+                    
+                    // Giới hạn hiển thị tối đa 6 công việc ở trang Home mà không làm mất reference của Adapter
+                    if (jobList.size() > 5) {
+                        List<Job> temp = new ArrayList<>(jobList.subList(0, 5));
+                        jobList.clear();
+                        jobList.addAll(temp);
+                    }
                     
                     updateCategoryUI(uniqueCategories);
                     jobAdapter.notifyDataSetChanged();
@@ -241,6 +249,14 @@ public class HomeFragment extends BaseFragment {
 
         if (tvViewAllCategories != null) {
             tvViewAllCategories.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).navigateToSearch(null);
+                }
+            });
+        }
+
+        if (tvViewMoreSuggestions != null) {
+            tvViewMoreSuggestions.setOnClickListener(v -> {
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).navigateToSearch(null);
                 }

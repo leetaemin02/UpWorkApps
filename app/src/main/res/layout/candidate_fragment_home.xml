@@ -91,13 +91,16 @@
                     android:textColor="@color/text_main" />
 
                 <TextView
+                    android:id="@+id/tvViewMoreSuggestions"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:text="Xem thêm"
                     android:textColor="@color/primary"
                     android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true" />
             </RelativeLayout>
 
             <androidx.recyclerview.widget.RecyclerView
