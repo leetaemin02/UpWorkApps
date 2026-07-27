@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_gray">
@@ -23,23 +24,13 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <ImageView
-            android:id="@+id/ivShare"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_share"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <ImageView
             android:id="@+id/ivHeart"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@android:drawable/btn_star"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/ivShare" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -118,16 +109,23 @@
                     <GridLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:columnCount="2"
-                        android:rowCount="2">
-                        <!-- Info items like Salary, Exp... -->
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical">
+                        android:columnCount="2">
+                        <!-- Info items -->
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical" android:layout_marginBottom="12dp">
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MỨC LƯƠNG" android:textSize="10sp" android:textColor="@color/text_sub"/>
-                            <TextView android:id="@+id/tvDetailSalary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="25 - 40 Triệu" android:textColor="@color/primary" android:textStyle="bold"/>
+                            <TextView android:id="@+id/tvDetailSalary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thỏa thuận" android:textColor="@color/primary" android:textStyle="bold"/>
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical" android:layout_marginBottom="12dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="KINH NGHIỆM" android:textSize="10sp" android:textColor="@color/text_sub"/>
+                            <TextView android:id="@+id/tvDetailExp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Không yêu cầu" android:textColor="@color/text_main" android:textStyle="bold"/>
                         </LinearLayout>
                         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="KINH NGHIỆM" android:textSize="10sp" android:textColor="@color/text_sub"/>
-                            <TextView android:id="@+id/tvDetailExp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2 - 5 Năm" android:textColor="@color/text_main" android:textStyle="bold"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DANH MỤC" android:textSize="10sp" android:textColor="@color/text_sub"/>
+                            <TextView android:id="@+id/tvDetailCategory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="N/A" android:textColor="@color/text_main" android:textStyle="bold"/>
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SỐ LƯỢNG" android:textSize="10sp" android:textColor="@color/text_sub"/>
+                            <TextView android:id="@+id/tvDetailQuantity" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="01" android:textColor="@color/text_main" android:textStyle="bold"/>
                         </LinearLayout>
                     </GridLayout>
 
@@ -141,17 +139,14 @@
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yêu cầu ứng viên" android:textStyle="bold" android:layout_marginTop="24dp" android:textSize="16sp" android:textColor="@color/text_main" android:drawableStart="@drawable/bg_tag" android:drawablePadding="8dp"/>
             <TextView android:id="@+id/tvDetailReq" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Yêu cầu chi tiết tại đây..." android:textColor="@color/text_main" android:lineSpacingExtra="4dp"/>
 
+            <!-- Quyền lợi section -->
+            <TextView android:id="@+id/tvDetailBenefitsHeader" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quyền lợi" android:textStyle="bold" android:layout_marginTop="24dp" android:textSize="16sp" android:textColor="@color/text_main" android:drawableStart="@drawable/bg_tag" android:drawablePadding="8dp"/>
+            <TextView android:id="@+id/tvDetailBenefits" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Quyền lợi tại đây..." android:textColor="@color/text_main" android:lineSpacingExtra="4dp"/>
+
             <!-- Địa điểm section -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Địa điểm" android:textStyle="bold" android:layout_marginTop="24dp" android:textSize="16sp" android:textColor="@color/text_main" android:drawableStart="@drawable/bg_tag" android:drawablePadding="8dp"/>
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="150dp"
-                android:layout_marginTop="12dp"
-                app:cardCornerRadius="8dp"
-                app:cardBackgroundColor="@color/gray_light">
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="center" android:src="@android:drawable/ic_dialog_map"/>
-            </com.google.android.material.card.MaterialCardView>
-            <TextView android:id="@+id/tvDetailFullAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Địa chỉ chi tiết của công ty..." android:textSize="13sp" android:textColor="@color/text_sub"/>
+
+            <TextView android:id="@+id/tvDetailFullAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Địa chỉ chi tiết của công ty..." android:textColor="@color/text_main" android:lineSpacingExtra="4dp"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -200,6 +195,7 @@
             android:textSize="16sp"
             app:cornerRadius="8dp"
             android:visibility="gone"
+            app:icon="@drawable/ic_pdf_red"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
     </LinearLayout>
 

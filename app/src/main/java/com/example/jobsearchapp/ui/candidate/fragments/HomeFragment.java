@@ -21,6 +21,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class HomeFragment extends BaseFragment {
@@ -121,8 +122,6 @@ public class HomeFragment extends BaseFragment {
     private void loadJobsFromFirebase() {
         if (pbHome != null) pbHome.setVisibility(View.VISIBLE);
         db.collection("jobs")
-                .orderBy("postedAt", Query.Direction.DESCENDING)
-                .limit(50) 
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (pbHome != null) pbHome.setVisibility(View.GONE);
@@ -131,18 +130,25 @@ public class HomeFragment extends BaseFragment {
                     
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Job job = mapDocToJob(doc);
-                        jobList.add(job);
                         
-                        if (job.getCategory() != null && !job.getCategory().isEmpty()) {
-                            uniqueCategories.add(job.getCategory());
+                        // Lọc phía Client: Chỉ hiện bài đăng "active"
+                        if ("active".equalsIgnoreCase(job.getStatus())) {
+                            jobList.add(job);
+                            if (job.getCategory() != null && !job.getCategory().isEmpty()) {
+                                uniqueCategories.add(job.getCategory());
+                            }
                         }
                     }
+                    
+                    // Sắp xếp theo postedAt mới nhất
+                    Collections.sort(jobList, (j1, j2) -> Long.compare(j2.getPostedAt(), j1.getPostedAt()));
                     
                     updateCategoryUI(uniqueCategories);
                     jobAdapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
                     if (pbHome != null) pbHome.setVisibility(View.GONE);
+                    android.util.Log.e("Home", "Error: " + e.getMessage());
                 });
     }
 
@@ -166,6 +172,10 @@ public class HomeFragment extends BaseFragment {
         job.setJobType(doc.getString("jobType"));
         job.setCategory(doc.getString("category"));
         job.setExperienceRequired(doc.getString("experienceRequired"));
+        
+        Long qty = doc.getLong("quantity");
+        job.setQuantity(qty != null ? qty.intValue() : 1);
+
         job.setStatus(doc.getString("status"));
         
         job.setDeadlineFromObject(doc.get("deadline"));

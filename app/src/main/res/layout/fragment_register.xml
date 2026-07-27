@@ -74,7 +74,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:hint="Nguyễn Văn A"
-            android:inputType="textPersonName"
+            android:inputType="text"
             android:background="@drawable/bg_search_bar"
             android:paddingHorizontal="16dp"
             android:drawableStart="@android:drawable/ic_menu_myplaces"

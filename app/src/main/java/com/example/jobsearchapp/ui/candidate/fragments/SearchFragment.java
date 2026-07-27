@@ -443,8 +443,15 @@ public class SearchFragment extends BaseFragment {
                     filteredJobs.clear();
                     java.util.Set<String> uniqueCategories = new java.util.TreeSet<>();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        allJobs.add(mapDocToJob(doc));
+                        Job job = mapDocToJob(doc);
+                        // Lọc phía Client: Chỉ hiện bài đăng "active"
+                        if ("active".equalsIgnoreCase(job.getStatus())) {
+                            allJobs.add(job);
+                        }
                     }
+                    
+                    // Sắp xếp thủ công
+                    java.util.Collections.sort(allJobs, (j1, j2) -> Long.compare(j2.getPostedAt(), j1.getPostedAt()));
                     
                     boolean matchedCategory = false;
                     for (Job job : allJobs) {
@@ -474,6 +481,8 @@ public class SearchFragment extends BaseFragment {
         job.setEmployerId(doc.getString("employerId"));
         job.setTitle(doc.getString("title"));
         job.setDescription(doc.getString("description"));
+        job.setRequirements(doc.getString("requirements"));
+        job.setBenefits(doc.getString("benefits"));
         
         Long sMin = doc.getLong("salaryMin");
         job.setSalaryMin(sMin != null ? sMin : 0);
@@ -485,6 +494,10 @@ public class SearchFragment extends BaseFragment {
         job.setJobType(doc.getString("jobType"));
         job.setCategory(doc.getString("category"));
         job.setExperienceRequired(doc.getString("experienceRequired"));
+        
+        Long qty = doc.getLong("quantity");
+        job.setQuantity(qty != null ? qty.intValue() : 1);
+
         job.setStatus(doc.getString("status"));
         
         job.setDeadlineFromObject(doc.get("deadline"));

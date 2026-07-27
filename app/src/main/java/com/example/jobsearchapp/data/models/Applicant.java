@@ -12,6 +12,7 @@ public class Applicant implements Serializable {
     private String status;
     private String jobTitle;
     private String jobId;
+    private String avatarUrl;
 
     public Applicant() {}
 
@@ -41,4 +42,7 @@ public class Applicant implements Serializable {
 
     public String getJobId() { return jobId; }
     public void setJobId(String jobId) { this.jobId = jobId; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }

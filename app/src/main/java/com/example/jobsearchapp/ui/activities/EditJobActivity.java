@@ -12,7 +12,8 @@ import java.util.Map;
 
 public class EditJobActivity extends BaseActivity {
 
-    private EditText edtJobName, edtSalaryMin, edtSalaryMax, edtLocation, edtDescription, edtRequirements, edtBenefits, edtJobType, edtCategory, edtDeadline;
+    private EditText edtJobName, edtSalaryMin, edtSalaryMax, edtLocation, edtDescription, edtRequirements, edtBenefits, edtJobType, edtCategory, edtDeadline, edtQuantity;
+    private com.google.android.material.switchmaterial.SwitchMaterial swJobStatus;
     private Button btnUpdate;
     private ImageView ivBack;
     private FirebaseFirestore db;
@@ -35,6 +36,8 @@ public class EditJobActivity extends BaseActivity {
         edtJobType = findViewById(R.id.edtJobType);
         edtCategory = findViewById(R.id.edtCategory);
         edtDeadline = findViewById(R.id.edtDeadline);
+        edtQuantity = findViewById(R.id.edtQuantity);
+        swJobStatus = findViewById(R.id.swJobStatus);
         btnUpdate = findViewById(R.id.btnUpdate);
         ivBack = findViewById(R.id.ivBack);
 
@@ -56,6 +59,13 @@ public class EditJobActivity extends BaseActivity {
         edtBenefits.setText(currentJob.getBenefits());
         edtJobType.setText(currentJob.getJobType());
         edtCategory.setText(currentJob.getCategory());
+        edtQuantity.setText(String.valueOf(currentJob.getQuantity()));
+        swJobStatus.setChecked("active".equalsIgnoreCase(currentJob.getStatus()));
+        swJobStatus.setText("Trạng thái: " + (swJobStatus.isChecked() ? "Active" : "Closed"));
+
+        swJobStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            swJobStatus.setText("Trạng thái: " + (isChecked ? "Active" : "Closed"));
+        });
         
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
         edtDeadline.setText(sdf.format(new java.util.Date(currentJob.getDeadline())));
@@ -72,10 +82,21 @@ public class EditJobActivity extends BaseActivity {
             String sMin = edtSalaryMin.getText().toString().trim();
             String sMax = edtSalaryMax.getText().toString().trim();
             String loc = edtLocation.getText().toString().trim();
+            String qtyStr = edtQuantity.getText().toString().trim();
             
-            if (title.isEmpty() || sMin.isEmpty() || sMax.isEmpty() || loc.isEmpty()) {
+            if (title.isEmpty() || sMin.isEmpty() || sMax.isEmpty() || loc.isEmpty() || qtyStr.isEmpty()) {
                 showToast("Vui lòng điền đủ thông tin cơ bản");
                 return;
+            }
+
+            int newQty = Integer.parseInt(qtyStr);
+            String newStatus = swJobStatus.isChecked() ? "active" : "closed";
+
+            // Logic tự động: Nếu tăng số lượng > 0 mà đang closed, tự động mở lại
+            if (newQty > 0 && "closed".equalsIgnoreCase(currentJob.getStatus()) && swJobStatus.isChecked()) {
+                newStatus = "active";
+            } else if (newQty <= 0) {
+                newStatus = "closed";
             }
 
             Map<String, Object> updates = new HashMap<>();
@@ -88,6 +109,8 @@ public class EditJobActivity extends BaseActivity {
             updates.put("benefits", edtBenefits.getText().toString().trim());
             updates.put("jobType", edtJobType.getText().toString().trim());
             updates.put("category", edtCategory.getText().toString().trim());
+            updates.put("quantity", newQty);
+            updates.put("status", newStatus);
 
             String deadlineStr = edtDeadline.getText().toString().trim();
             long deadline = currentJob.getDeadline();

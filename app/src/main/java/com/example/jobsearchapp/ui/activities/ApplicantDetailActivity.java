@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 import android.widget.TextView;
+import com.bumptech.glide.Glide;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Applicant;
 import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.google.android.material.chip.Chip;
@@ -18,7 +20,9 @@ public class ApplicantDetailActivity extends BaseActivity {
     private TextView tvName, tvEmail, tvPhone, tvJobTitle;
     private ChipGroup cgSkills;
     private android.widget.ImageView ivAvatar;
-    private View btnViewCv, btnViewJob;
+    private View btnViewCv, btnViewJob, layoutActions;
+    private View btnAccept, btnReject;
+    private TextView tvProcessedStatus;
     private Applicant applicant;
     private FirebaseFirestore db;
 
@@ -35,8 +39,12 @@ public class ApplicantDetailActivity extends BaseActivity {
         tvJobTitle = findViewById(R.id.tvAppliedJobTitle);
         cgSkills = findViewById(R.id.cgApplicantSkills);
         ivAvatar = findViewById(R.id.ivApplicantAvatar);
-        btnViewCv = findViewById(R.id.btnViewApplicantCv);
+        btnViewCv = findViewById(R.id.btnViewCv);
         btnViewJob = findViewById(R.id.btnViewAppliedJob);
+        layoutActions = findViewById(R.id.layoutDetailActions);
+        btnAccept = findViewById(R.id.btnDetailAccept);
+        btnReject = findViewById(R.id.btnDetailReject);
+        tvProcessedStatus = findViewById(R.id.tvDetailProcessedStatus);
 
         db = FirebaseFirestore.getInstance();
 
@@ -55,7 +63,19 @@ public class ApplicantDetailActivity extends BaseActivity {
         tvName.setText(applicant.getName());
         tvEmail.setText("Email: " + applicant.getEmail());
         tvJobTitle.setText("Ứng tuyển: " + applicant.getJobTitle());
+
+        if (applicant.getAvatarUrl() != null && !applicant.getAvatarUrl().isEmpty()) {
+            Glide.with(this)
+                .load(applicant.getAvatarUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_avatar)
+                .into(ivAvatar);
+        } else {
+            ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
         
+        updateActionButtonsVisibility();
+
         btnViewCv.setOnClickListener(v -> {
             if (applicant.getCvUrl() != null && !applicant.getCvUrl().isEmpty()) {
                 try {
@@ -96,6 +116,44 @@ public class ApplicantDetailActivity extends BaseActivity {
         });
     }
 
+    private void updateActionButtonsVisibility() {
+        String status = applicant.getStatus();
+        if ("pending".equalsIgnoreCase(status) || status == null || status.isEmpty()) {
+            layoutActions.setVisibility(View.VISIBLE);
+            tvProcessedStatus.setVisibility(View.GONE);
+        } else {
+            layoutActions.setVisibility(View.GONE);
+            tvProcessedStatus.setVisibility(View.VISIBLE);
+            String statusText = "Hồ sơ này đã được xử lý: " + 
+                ("Accepted".equalsIgnoreCase(status) ? "Phỏng vấn" : "Từ chối");
+            tvProcessedStatus.setText(statusText);
+        }
+    }
+
+    private void updateStatus(String newStatus) {
+        db.collection("applications").document(applicant.getApplicationId())
+            .update("status", newStatus)
+            .addOnSuccessListener(aVoid -> {
+                applicant.setStatus(newStatus);
+                updateActionButtonsVisibility();
+                
+                // Gửi thông báo
+                String statusVN = "Accepted".equalsIgnoreCase(newStatus) ? "Phỏng vấn" : "Từ chối";
+                Notification notif = new Notification(
+                        applicant.getId(),
+                        "Cập nhật trạng thái đơn ứng tuyển",
+                        "Đơn ứng tuyển vị trí " + applicant.getJobTitle() + " của bạn đã được cập nhật: " + statusVN,
+                        "status_change",
+                        applicant.getJobId(),
+                        applicant.getApplicationId()
+                );
+                db.collection("notifications").add(notif);
+                
+                showToast("Đã " + (newStatus.equals("Accepted") ? "chấp nhận" : "từ chối") + " ứng viên");
+            })
+            .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
+    }
+
     private void loadFullProfile() {
         db.collection("users").document(applicant.getId()).get()
             .addOnSuccessListener(doc -> {
@@ -125,5 +183,7 @@ public class ApplicantDetailActivity extends BaseActivity {
     @Override
     protected void initListeners() {
         findViewById(R.id.ivBack).setOnClickListener(v -> finish());
+        if (btnAccept != null) btnAccept.setOnClickListener(v -> updateStatus("Accepted"));
+        if (btnReject != null) btnReject.setOnClickListener(v -> updateStatus("Rejected"));
     }
 }

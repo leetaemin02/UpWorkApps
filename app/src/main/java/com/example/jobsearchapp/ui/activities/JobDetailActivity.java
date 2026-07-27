@@ -1,5 +1,6 @@
 package com.example.jobsearchapp.ui.activities;
 
+import android.content.Intent;
 import android.view.View;
 import android.widget.TextView;
 
@@ -7,6 +8,7 @@ import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.local.AppDatabase;
 import com.example.jobsearchapp.data.models.Job;
 import com.example.jobsearchapp.data.models.Application;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.data.models.SavedJob;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.utils.FormatUtils;
@@ -19,6 +21,7 @@ public class JobDetailActivity extends BaseActivity {
     private Application application;
     private boolean isFinishing = false;
     private TextView tvTitle, tvSalary, tvLocation, tvDesc, tvReq, tvDetailCompany, tvExp, tvDeadline, tvFullAddress, tvAppliedStatus;
+    private TextView tvDetailCategory, tvDetailQuantity, tvDetailBenefits, tvDetailBenefitsHeader;
     private android.widget.ImageView ivDetailLogo;
     private com.google.android.material.button.MaterialButton btnApplyNow, btnViewAppliedCv;
 
@@ -45,6 +48,12 @@ public class JobDetailActivity extends BaseActivity {
         tvFullAddress = findViewById(R.id.tvDetailFullAddress);
         ivDetailLogo = findViewById(R.id.ivDetailLogo);
         tvAppliedStatus = findViewById(R.id.tvAppliedStatus);
+        
+        tvDetailCategory = findViewById(R.id.tvDetailCategory);
+        tvDetailQuantity = findViewById(R.id.tvDetailQuantity);
+        tvDetailBenefits = findViewById(R.id.tvDetailBenefits);
+        tvDetailBenefitsHeader = findViewById(R.id.tvDetailBenefitsHeader);
+
         btnApplyNow = findViewById(R.id.btnApplyNow);
         btnViewAppliedCv = findViewById(R.id.btnViewAppliedCv);
 
@@ -62,30 +71,53 @@ public class JobDetailActivity extends BaseActivity {
         }
 
         if (job != null) {
-            displayJobInfo();
             if (application != null) {
-                setupApplicationRealtimeUpdate();
+                // CHẾ ĐỘ XEM ĐƠN ỨNG TUYỂN (Từ Notification / Apps tab)
+                setupApplicationViewMode();
             } else {
-                checkIfJobIsSaved();
+                // CHẾ ĐỘ XEM CÔNG VIỆC (Từ Home / Search / Saved)
+                setupJobViewMode();
             }
         } else {
-            // Log lỗi để debug
-            android.util.Log.e("JobDetail", "Job data is null from Intent");
             showToast("Lỗi: Không thể tải thông tin công việc");
-            isFinishing = true;
             finish();
         }
     }
 
+    private void setupJobViewMode() {
+        displayJobInfo();
+        checkIfJobIsSaved();
+        
+        // Luôn ẩn các thành phần của đơn ứng tuyển ở trang chi tiết công việc
+        if (tvAppliedStatus != null) tvAppliedStatus.setVisibility(View.GONE);
+        if (btnViewAppliedCv != null) btnViewAppliedCv.setVisibility(View.GONE);
+        
+        // Hiển thị nút nộp đơn dựa trên Role
+        String role = sessionManager.getRole();
+        if ("employer".equalsIgnoreCase(role)) {
+            if (btnApplyNow != null) btnApplyNow.setVisibility(View.GONE);
+        } else {
+            // Hiển thị cho candidate và cả khi chưa đăng nhập
+            if (btnApplyNow != null) btnApplyNow.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void setupApplicationViewMode() {
+        displayJobInfo();
+        
+        // Ẩn nút nộp đơn
+        if (btnApplyNow != null) btnApplyNow.setVisibility(View.GONE);
+        
+        // Hiển thị trạng thái và nút xem CV
+        if (tvAppliedStatus != null) tvAppliedStatus.setVisibility(View.VISIBLE);
+        if (btnViewAppliedCv != null) btnViewAppliedCv.setVisibility(View.VISIBLE);
+        
+        displayApplicationInfo();
+        setupApplicationRealtimeUpdate();
+    }
+
     private void displayJobInfo() {
         if (job == null) return;
-
-        // Ẩn nút ứng tuyển nếu là nhà tuyển dụng hoặc là chủ sở hữu bài đăng
-        String currentUserId = sessionManager.getUserId();
-        if ("employer".equals(sessionManager.getRole()) || 
-            (job.getEmployerId() != null && job.getEmployerId().equals(currentUserId))) {
-            if (btnApplyNow != null) btnApplyNow.setVisibility(View.GONE);
-        }
 
         if (tvTitle != null) tvTitle.setText(job.getTitle());
         if (tvSalary != null) tvSalary.setText(FormatUtils.formatSalaryRange(job.getSalaryMin(), job.getSalaryMax()));
@@ -94,21 +126,19 @@ public class JobDetailActivity extends BaseActivity {
         if (tvReq != null) tvReq.setText(job.getRequirements());
         if (tvDetailCompany != null) tvDetailCompany.setText(job.getCompanyName());
         if (tvExp != null) tvExp.setText(job.getExperienceRequired());
-        if (tvFullAddress != null) tvFullAddress.setText(job.getLocation()); // Or address if you have it
+        if (tvFullAddress != null) tvFullAddress.setText(job.getLocation());
 
-        if (ivDetailLogo != null && job.getLogoUrl() != null && !job.getLogoUrl().isEmpty()) {
-            // If you have a library like Glide or Picasso, use it here. 
-            // For now, it stays with default or you can add image loading logic.
-        }
+        if (tvDetailCategory != null) tvDetailCategory.setText(job.getCategory() != null ? job.getCategory() : "Khác");
+        if (tvDetailQuantity != null) tvDetailQuantity.setText(String.format(java.util.Locale.getDefault(), "%02d Người", job.getQuantity()));
 
-        // Tính toán đếm ngược deadline
-        if (tvDeadline != null) {
-            long diff = job.getDeadline() - System.currentTimeMillis();
-            if (diff > 0) {
-                long days = diff / (24 * 60 * 60 * 1000);
-                tvDeadline.setText("Hạn nộp: Còn " + days + " ngày");
+        if (tvDetailBenefits != null) {
+            if (job.getBenefits() != null && !job.getBenefits().isEmpty()) {
+                tvDetailBenefits.setText(job.getBenefits());
+                tvDetailBenefits.setVisibility(View.VISIBLE);
+                if (tvDetailBenefitsHeader != null) tvDetailBenefitsHeader.setVisibility(View.VISIBLE);
             } else {
-                tvDeadline.setText("Hạn nộp: Đã hết hạn");
+                tvDetailBenefits.setVisibility(View.GONE);
+                if (tvDetailBenefitsHeader != null) tvDetailBenefitsHeader.setVisibility(View.GONE);
             }
         }
     }
@@ -191,7 +221,6 @@ public class JobDetailActivity extends BaseActivity {
             btnViewAppliedCv.setOnClickListener(v -> {
                 if (application.getCvUrl() != null && !application.getCvUrl().isEmpty()) {
                     try {
-                        // Sử dụng logic giống ProfileFragment: Mở trực tiếp link trong trình duyệt
                         String url = application.getCvUrl();
                         if (!url.startsWith("http")) url = "https://" + url;
                         
@@ -209,7 +238,7 @@ public class JobDetailActivity extends BaseActivity {
 
     private void checkIfJobIsSaved() {
         String userId = sessionManager.getUserId();
-        if (userId.isEmpty()) return;
+        if (userId.isEmpty() || job == null) return;
 
         db.collection("saved_jobs").document(userId + "_" + job.getId()).get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -227,7 +256,6 @@ public class JobDetailActivity extends BaseActivity {
 
     @Override
     protected void initListeners() {
-        // Không khởi tạo listeners nếu activity đang đóng do lỗi
         if (isFinishing) return;
 
         View ivBack = findViewById(R.id.ivBack);
@@ -239,21 +267,35 @@ public class JobDetailActivity extends BaseActivity {
             btnApplyNow.setOnClickListener(v -> {
                 String userId = sessionManager.getUserId();
                 if (userId.isEmpty()) {
-                    showToast("Vui lòng đăng nhập để ứng tuyển");
+                    // CHƯA ĐĂNG NHẬP -> Chuyển sang AuthActivity
+                    startActivity(new Intent(this, AuthActivity.class));
                     return;
                 }
 
                 if (job == null) return;
                 
-                // Bước 1: Kiểm tra xem User đã có CV chưa
-                db.collection("users").document(userId).get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            String cvPath = documentSnapshot.getString("cvPath");
-                            String userName = documentSnapshot.getString("fullName");
-                            showApplyConfirmation(userId, cvPath, userName);
+                // Bước 1: Kiểm tra xem User đã có đơn ứng tuyển đang chờ (pending) cho công việc này chưa
+                db.collection("applications")
+                    .whereEqualTo("candidateId", userId)
+                    .whereEqualTo("jobId", job.getId())
+                    .whereEqualTo("status", "pending")
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            showToast("Bạn đã nộp đơn cho công việc này rồi, vui lòng chờ kết quả");
+                        } else {
+                            // Bước 2: Kiểm tra xem User đã có CV chưa
+                            db.collection("users").document(userId).get()
+                                .addOnSuccessListener(documentSnapshot -> {
+                                    if (documentSnapshot.exists()) {
+                                        String cvPath = documentSnapshot.getString("cvPath");
+                                        String userName = documentSnapshot.getString("fullName");
+                                        showApplyConfirmation(userId, cvPath, userName);
+                                    }
+                                });
                         }
-                    });
+                    })
+                    .addOnFailureListener(e -> showToast("Lỗi kiểm tra đơn ứng tuyển: " + e.getMessage()));
             });
         }
 
@@ -338,8 +380,19 @@ public class JobDetailActivity extends BaseActivity {
         db.collection("applications")
                 .add(app)
                 .addOnSuccessListener(documentReference -> {
+                    // Tạo thông báo cho Ứng viên
+                    Notification notif = new Notification(
+                            userId,
+                            "Nộp đơn thành công",
+                            "Bạn đã nộp đơn thành công vào vị trí " + job.getTitle(),
+                            "application",
+                            job.getId(),
+                            documentReference.getId()
+                    );
+                    db.collection("notifications").add(notif);
+
                     showToast("Đã gửi yêu cầu ứng tuyển thành công!");
-                    finish();
+                    // Không thay đổi giao diện sau khi nộp, giữ nguyên nút nộp hồ sơ
                 })
                 .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
     }

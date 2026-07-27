@@ -7,6 +7,7 @@ import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Applicant;
 import com.example.jobsearchapp.data.models.Application;
 import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.ui.employer.adapters.ApplicantAdapter;
@@ -15,7 +16,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ViewApplicantsActivity extends BaseActivity implements ApplicantAdapter.OnApplicantActionListener {
@@ -132,6 +135,7 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
 
     @Override
     public void onAccept(Applicant applicant) {
+        // Chỉ cập nhật trạng thái đơn ứng tuyển, không can thiệp vào số lượng bài đăng
         updateApplicationStatus(applicant.getApplicationId(), "Accepted");
     }
 
@@ -149,10 +153,34 @@ public class ViewApplicantsActivity extends BaseActivity implements ApplicantAda
 
     private void updateApplicationStatus(String applicationId, String status) {
         db.collection("applications").document(applicationId)
-            .update("status", status)
-            .addOnSuccessListener(aVoid -> {
-                showToast("Đã " + (status.equals("Accepted") ? "chấp nhận" : "từ chối") + " đơn ứng tuyển");
-                loadApplicants();
+            .get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    String candidateId = doc.getString("candidateId");
+                    String jobTitle = doc.getString("jobTitle");
+                    String jobId = doc.getString("jobId");
+
+                    db.collection("applications").document(applicationId)
+                        .update("status", status)
+                        .addOnSuccessListener(aVoid -> {
+                            // Tạo thông báo kết quả cho Ứng viên
+                            String statusVN = "pending".equalsIgnoreCase(status) ? "Đang xem xét" :
+                                             "Rejected".equalsIgnoreCase(status) ? "Từ chối" : "Phỏng vấn";
+                            
+                            Notification notif = new Notification(
+                                    candidateId,
+                                    "Cập nhật trạng thái đơn ứng tuyển",
+                                    "Đơn ứng tuyển vị trí " + jobTitle + " của bạn đã được cập nhật: " + statusVN,
+                                    "status_change",
+                                    jobId,
+                                    applicationId
+                            );
+                            db.collection("notifications").add(notif);
+
+                            showToast("Đã " + (status.equals("Accepted") ? "chấp nhận" : "từ chối") + " đơn ứng tuyển");
+                            loadApplicants();
+                        });
+                }
             })
             .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
     }

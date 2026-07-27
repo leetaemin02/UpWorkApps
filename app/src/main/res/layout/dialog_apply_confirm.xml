@@ -34,8 +34,7 @@
         <ImageView
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@android:drawable/ic_menu_edit"
-            app:tint="@color/primary" />
+            android:src="@drawable/ic_pdf_red" />
 
         <TextView
             android:id="@+id/tvConfirmCvName"

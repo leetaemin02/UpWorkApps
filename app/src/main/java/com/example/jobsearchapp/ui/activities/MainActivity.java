@@ -1,9 +1,12 @@
 package com.example.jobsearchapp.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
+import com.bumptech.glide.Glide;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.ui.candidate.fragments.AppliedJobsFragment;
@@ -11,12 +14,15 @@ import com.example.jobsearchapp.ui.candidate.fragments.HomeFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.ProfileFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.SearchFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends BaseActivity {
 
     private BottomNavigationView bottomNavigation;
     private TextView tvAppName;
-    private View ivProfile;
+    private ImageView ivProfile, ivNotification;
+    private View viewNotifBadge;
+    private com.google.firebase.firestore.ListenerRegistration notifListener;
 
     @Override
     protected int getLayoutId() {
@@ -28,19 +34,21 @@ public class MainActivity extends BaseActivity {
         bottomNavigation = findViewById(R.id.bottomNavigation);
         tvAppName = findViewById(R.id.tvAppName);
         ivProfile = findViewById(R.id.ivProfile);
+        ivNotification = findViewById(R.id.ivNotification);
+        viewNotifBadge = findViewById(R.id.viewNotifBadge);
 
         com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
         String role = sessionManager.getRole();
         String userId = sessionManager.getUserId();
 
-        // Cập nhật nhãn Profile thành Login nếu chưa đăng nhập nhưng vẫn giữ icon người
+        // Cập nhật nhãn Profile thành Login nếu chưa đăng nhập nhưng vẫn giữ icon người mới
         android.view.MenuItem profileItem = bottomNavigation.getMenu().findItem(R.id.nav_profile);
         if (userId.isEmpty()) {
             profileItem.setTitle("Login");
         } else {
             profileItem.setTitle("Profile");
         }
-        profileItem.setIcon(android.R.drawable.ic_menu_myplaces); // Luôn giữ icon người (hoặc icon profile mặc định)
+        profileItem.setIcon(R.drawable.ic_profile_custom); // Sử dụng icon người mới bạn đã gửi
 
         // Ẩn tab Apps nếu là Nhà tuyển dụng (Employer)
         if ("employer".equalsIgnoreCase(role)) {
@@ -57,6 +65,72 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        updateProfileImage();
+        setupNotificationBadge();
+    }
+
+    private void setupNotificationBadge() {
+        com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+        String userId = sessionManager.getUserId();
+        if (userId.isEmpty() || viewNotifBadge == null) {
+            if (viewNotifBadge != null) viewNotifBadge.setVisibility(View.GONE);
+            return;
+        }
+
+        if (notifListener != null) notifListener.remove();
+
+        // Lắng nghe thông báo chưa đọc
+        notifListener = FirebaseFirestore.getInstance().collection("notifications")
+                .whereEqualTo("recipientId", userId)
+                .whereEqualTo("read", false)
+                .addSnapshotListener((value, error) -> {
+                    if (value != null && !value.isEmpty()) {
+                        viewNotifBadge.setVisibility(View.VISIBLE);
+                    } else {
+                        viewNotifBadge.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (notifListener != null) notifListener.remove();
+    }
+
+    public void updateProfileImage() {
+        if (ivProfile == null) return;
+        
+        com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+        String userId = sessionManager.getUserId();
+        
+        if (!userId.isEmpty()) {
+            FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        String avatarUrl = doc.getString("avatarUrl");
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            Glide.with(this)
+                                .load(avatarUrl)
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_default_avatar)
+                                .into(ivProfile);
+                        } else {
+                            ivProfile.setImageResource(R.drawable.ic_default_avatar);
+                        }
+                    } else {
+                        ivProfile.setImageResource(R.drawable.ic_default_avatar);
+                    }
+                })
+                .addOnFailureListener(e -> ivProfile.setImageResource(R.drawable.ic_default_avatar));
+        } else {
+            ivProfile.setImageResource(R.drawable.ic_default_avatar);
+        }
+    }
+
+    @Override
     protected void initListeners() {
         // Nhấn vào chữ CareerLaunch -> Về trang chủ
         if (tvAppName != null) {
@@ -69,6 +143,17 @@ public class MainActivity extends BaseActivity {
         if (ivProfile != null) {
             ivProfile.setOnClickListener(v -> {
                 bottomNavigation.setSelectedItemId(R.id.nav_profile);
+            });
+        }
+
+        if (ivNotification != null) {
+            ivNotification.setOnClickListener(v -> {
+                com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+                if (sessionManager.getUserId().isEmpty()) {
+                    startActivity(new Intent(this, AuthActivity.class));
+                } else {
+                    startActivity(new Intent(this, NotificationActivity.class));
+                }
             });
         }
 

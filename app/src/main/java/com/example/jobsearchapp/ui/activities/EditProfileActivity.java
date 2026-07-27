@@ -1,9 +1,20 @@
 package com.example.jobsearchapp.ui.activities;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.bumptech.glide.Glide;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.base.BaseActivity;
+import com.example.jobsearchapp.utils.FirebaseStorageHelper;
 import com.example.jobsearchapp.utils.SessionManager;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -14,9 +25,16 @@ public class EditProfileActivity extends BaseActivity {
     private EditText edtFullName, edtPhone, edtCompany, edtProfession, edtLocation;
     private EditText edtWebsite, edtCompanyDesc, edtLogo;
     private android.widget.LinearLayout layoutEmployerFields;
+    private ImageView ivAvatar;
+    private TextView tvEditAvatar;
     private User currentUser;
     private FirebaseFirestore db;
     private String userId;
+
+    private final ActivityResultLauncher<String> avatarPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> { if (uri != null) handleSelectedAvatar(uri); }
+    );
 
     @Override
     protected int getLayoutId() { return R.layout.candidate_activity_edit_profile; }
@@ -33,6 +51,8 @@ public class EditProfileActivity extends BaseActivity {
         edtCompanyDesc = findViewById(R.id.edtEditCompanyDesc);
         edtLogo = findViewById(R.id.edtEditLogo);
         layoutEmployerFields = findViewById(R.id.layoutEmployerFields);
+        ivAvatar = findViewById(R.id.ivEditProfileAvatar);
+        tvEditAvatar = findViewById(R.id.tvEditAvatarLabel);
 
         db = FirebaseFirestore.getInstance();
         SessionManager sessionManager = new SessionManager(this);
@@ -62,15 +82,57 @@ public class EditProfileActivity extends BaseActivity {
                         if (edtWebsite != null) edtWebsite.setText(currentUser.getCompanyWebsite());
                         if (edtCompanyDesc != null) edtCompanyDesc.setText(currentUser.getCompanyDescription());
                         if (edtLogo != null) edtLogo.setText(currentUser.getAvatarUrl());
+
+                        displayAvatar(currentUser.getAvatarUrl());
                     }
                 }
             })
             .addOnFailureListener(e -> showToast("Lỗi tải dữ liệu: " + e.getMessage()));
     }
 
+    private void displayAvatar(String url) {
+        if (url != null && !url.isEmpty()) {
+            Glide.with(this)
+                .load(url)
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_avatar)
+                .into(ivAvatar);
+        } else {
+            ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
+    }
+
+    private void handleSelectedAvatar(Uri uri) {
+        showToast("Đang tải ảnh đại diện...");
+        FirebaseStorageHelper storageHelper = new FirebaseStorageHelper();
+        storageHelper.uploadAvatar(this, uri, userId, new FirebaseStorageHelper.UploadCallback() {
+            @Override
+            public void onSuccess(String downloadUrl) {
+                db.collection("users").document(userId)
+                    .update("avatarUrl", downloadUrl)
+                    .addOnSuccessListener(aVoid -> {
+                        showToast("Cập nhật ảnh thành công");
+                        displayAvatar(downloadUrl);
+                    });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                showToast("Lỗi tải ảnh: " + e.getMessage());
+            }
+        });
+    }
+
     @Override
     protected void initListeners() {
         findViewById(R.id.ivBackEdit).setOnClickListener(v -> finish());
+
+        if (ivAvatar != null) {
+            ivAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
+        if (tvEditAvatar != null) {
+            tvEditAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
         
         findViewById(R.id.btnSaveProfile).setOnClickListener(v -> {
             if (userId != null && !userId.isEmpty()) {

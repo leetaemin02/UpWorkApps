@@ -15,6 +15,7 @@ import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.activities.AuthActivity;
 import com.example.jobsearchapp.ui.activities.EditProfileActivity;
+import com.example.jobsearchapp.ui.activities.MainActivity;
 import com.example.jobsearchapp.ui.activities.ManageJobsActivity;
 import com.example.jobsearchapp.ui.activities.PostJobActivity;
 import com.example.jobsearchapp.ui.activities.ViewApplicantsActivity;
@@ -29,8 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileFragment extends BaseFragment {
-    private TextView tvName, tvEmail, tvProfession, tvLocation, tvCvName, tvEmployerWelcome;
+    private TextView tvName, tvEmail, tvLocation, tvCvName, tvEmployerWelcome, tvEditAvatar;
     private LinearLayout layoutLoggedIn, layoutGuest, layoutCvItem, layoutEmployerDashboard;
+    private android.widget.ImageView ivProfileAvatar;
     private ChipGroup cgProfileSkills;
     private SessionManager sessionManager;
     private User currentUser;
@@ -41,6 +43,11 @@ public class ProfileFragment extends BaseFragment {
             uri -> { if (uri != null) handleSelectedCV(uri); }
     );
 
+    private final ActivityResultLauncher<String> avatarPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> { if (uri != null) handleSelectedAvatar(uri); }
+    );
+
     @Override
     protected int getLayoutId() { return R.layout.candidate_fragment_profile; }
 
@@ -48,12 +55,12 @@ public class ProfileFragment extends BaseFragment {
     protected void initViews(View view) {
         tvName = view.findViewById(R.id.tvProfileName);
         tvEmail = view.findViewById(R.id.tvProfileEmail);
-        tvProfession = view.findViewById(R.id.tvProfileProfession);
         tvLocation = view.findViewById(R.id.tvProfileLocation);
         tvCvName = view.findViewById(R.id.tvCvName);
-
+        tvEditAvatar = view.findViewById(R.id.tvEditAvatar);
 
         layoutCvItem = view.findViewById(R.id.layout_cv_item);
+        ivProfileAvatar = view.findViewById(R.id.ivProfileAvatar);
 
         layoutLoggedIn = view.findViewById(R.id.layout_logged_in);
         layoutGuest = view.findViewById(R.id.layout_guest);
@@ -111,15 +118,24 @@ public class ProfileFragment extends BaseFragment {
 
     private void displayCandidateData() {
         tvName.setText(currentUser.getFullName());
-        tvEmail.setText(currentUser.getEmail());
-        tvProfession.setText(currentUser.getProfession());
-        tvLocation.setText(currentUser.getLocation());
+        tvEmail.setText("Email: " + currentUser.getEmail());
+        tvLocation.setText("Địa điểm: " + (currentUser.getLocation() != null ? currentUser.getLocation() : "Chưa cập nhật"));
+
+        if (currentUser.getAvatarUrl() != null && !currentUser.getAvatarUrl().isEmpty()) {
+            com.bumptech.glide.Glide.with(this)
+                .load(currentUser.getAvatarUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_avatar)
+                .into(ivProfileAvatar);
+        } else {
+            ivProfileAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
 
         if (currentUser.getCvPath() != null && !currentUser.getCvPath().isEmpty()) {
-            layoutCvItem.setVisibility(View.VISIBLE);
+            layoutCvItem.setVisibility(android.view.View.VISIBLE);
             tvCvName.setText("My_CV.pdf");
         } else {
-            layoutCvItem.setVisibility(View.GONE);
+            layoutCvItem.setVisibility(android.view.View.GONE);
         }
         loadSkills(currentUser.getSkills());
     }
@@ -183,6 +199,37 @@ public class ProfileFragment extends BaseFragment {
         });
     }
 
+    private void handleSelectedAvatar(Uri uri) {
+        if (currentUser == null) return;
+
+        showToast("Đang tải ảnh đại diện...");
+        FirebaseStorageHelper storageHelper = new FirebaseStorageHelper();
+        storageHelper.uploadAvatar(requireContext(), uri, currentUser.getId(), new FirebaseStorageHelper.UploadCallback() {
+            @Override
+            public void onSuccess(String downloadUrl) {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("avatarUrl", downloadUrl);
+
+                db.collection("users").document(currentUser.getId())
+                    .update(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        showToast("Cập nhật ảnh đại diện thành công");
+                        loadUserData(currentUser.getId(), sessionManager.getRole());
+                        
+                        // Cập nhật cả ở MainActivity
+                        if (getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).updateProfileImage();
+                        }
+                    });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                showToast("Lỗi tải ảnh: " + e.getMessage());
+            }
+        });
+    }
+
     private void addSkill(String skill) {
         if (currentUser == null) return;
         String current = currentUser.getSkills();
@@ -213,6 +260,13 @@ public class ProfileFragment extends BaseFragment {
 
         getView().findViewById(R.id.btnGoToAuth).setOnClickListener(v -> startActivity(new Intent(getActivity(), AuthActivity.class)));
         getView().findViewById(R.id.btnUploadCV).setOnClickListener(v -> cvPickerLauncher.launch("application/pdf"));
+
+        if (ivProfileAvatar != null) {
+            ivProfileAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
+        if (tvEditAvatar != null) {
+            tvEditAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
 
         View ivDeleteCv = getView().findViewById(R.id.ivDeleteCv);
         if (ivDeleteCv != null) {

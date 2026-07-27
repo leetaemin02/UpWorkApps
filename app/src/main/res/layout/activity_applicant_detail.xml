@@ -141,12 +141,12 @@
 
         <!-- CV Action -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnViewApplicantCv"
+            android:id="@+id/btnViewCv"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:text="Xem CV đã nộp (PDF)"
             android:layout_marginTop="32dp"
-            app:icon="@android:drawable/ic_menu_view"
+            app:icon="@drawable/ic_pdf_red"
             app:cornerRadius="12dp" />
 
         <!-- Job Detail Action -->
@@ -159,6 +159,49 @@
             android:layout_marginTop="12dp"
             app:icon="@android:drawable/ic_menu_info_details"
             app:cornerRadius="12dp" />
+
+        <!-- Accept/Reject Actions -->
+        <LinearLayout
+            android:id="@+id/layoutDetailActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDetailReject"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Từ chối"
+                android:textColor="@color/error"
+                app:cornerRadius="12dp"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDetailAccept"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Chấp nhận"
+                android:backgroundTint="@color/success"
+                app:cornerRadius="12dp"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvDetailProcessedStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hồ sơ này đã được xử lý"
+            android:textStyle="bold|italic"
+            android:textColor="@color/text_sub"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone"/>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
