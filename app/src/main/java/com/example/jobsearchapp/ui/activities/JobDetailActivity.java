@@ -290,7 +290,8 @@ public class JobDetailActivity extends BaseActivity {
                                     if (documentSnapshot.exists()) {
                                         String cvPath = documentSnapshot.getString("cvPath");
                                         String userName = documentSnapshot.getString("fullName");
-                                        showApplyConfirmation(userId, cvPath, userName);
+                                        String avatarUrl = documentSnapshot.getString("avatarUrl");
+                                        showApplyConfirmation(userId, cvPath, userName, avatarUrl);
                                     }
                                 });
                         }
@@ -332,7 +333,7 @@ public class JobDetailActivity extends BaseActivity {
         }
     }
 
-    private void showApplyConfirmation(String userId, String cvPath, String userName) {
+    private void showApplyConfirmation(String userId, String cvPath, String userName, String avatarUrl) {
         com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.dialog_apply_confirm, null);
         
@@ -348,7 +349,7 @@ public class JobDetailActivity extends BaseActivity {
             
             btnConfirm.setOnClickListener(v -> {
                 dialog.dismiss();
-                submitApplication(userId, cvPath, userName);
+                submitApplication(userId, cvPath, userName, avatarUrl);
             });
         } else {
             tvStatus.setText("Bạn chưa có CV!");
@@ -367,13 +368,14 @@ public class JobDetailActivity extends BaseActivity {
         dialog.show();
     }
 
-    private void submitApplication(String userId, String cvPath, String userName) {
+    private void submitApplication(String userId, String cvPath, String userName, String avatarUrl) {
         Application app = new Application(job.getId(), userId, job.getCompanyId(), job.getEmployerId());
         app.setJobTitle(job.getTitle());
         app.setCompanyName(job.getCompanyName());
         app.setLocation(job.getLocation());
         app.setCvUrl(cvPath);
         app.setCandidateName(userName);
+        app.setCandidateAvatarUrl(avatarUrl);
         app.setStatus("pending");
         app.setAppliedAt(System.currentTimeMillis());
 

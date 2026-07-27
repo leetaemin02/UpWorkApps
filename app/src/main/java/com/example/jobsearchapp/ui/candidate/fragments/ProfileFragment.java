@@ -30,8 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ProfileFragment extends BaseFragment {
-    private TextView tvName, tvEmail, tvLocation, tvCvName, tvEmployerWelcome, tvEditAvatar;
-    private LinearLayout layoutLoggedIn, layoutGuest, layoutCvItem, layoutEmployerDashboard;
+    private TextView tvName, tvEmail, tvLocation, tvCvName, tvEditAvatar;
+    private LinearLayout layoutLoggedIn, layoutGuest, layoutCvItem;
     private android.widget.ImageView ivProfileAvatar;
     private ChipGroup cgProfileSkills;
     private SessionManager sessionManager;
@@ -64,11 +64,6 @@ public class ProfileFragment extends BaseFragment {
 
         layoutLoggedIn = view.findViewById(R.id.layout_logged_in);
         layoutGuest = view.findViewById(R.id.layout_guest);
-        layoutCvItem = view.findViewById(R.id.layout_cv_item);
-        cgProfileSkills = view.findViewById(R.id.cgProfileSkills);
-
-        layoutEmployerDashboard = view.findViewById(R.id.layout_employer_dashboard);
-        tvEmployerWelcome = view.findViewById(R.id.tvEmployerWelcome);
         cgProfileSkills = view.findViewById(R.id.cgProfileSkills);
 
         db = FirebaseFirestore.getInstance();
@@ -88,9 +83,9 @@ public class ProfileFragment extends BaseFragment {
         if (userId.isEmpty()) {
             layoutGuest.setVisibility(View.VISIBLE);
             layoutLoggedIn.setVisibility(View.GONE);
-            layoutEmployerDashboard.setVisibility(View.GONE);
         } else {
             layoutGuest.setVisibility(View.GONE);
+            layoutLoggedIn.setVisibility(View.VISIBLE);
             loadUserData(userId, role);
         }
     }
@@ -102,15 +97,7 @@ public class ProfileFragment extends BaseFragment {
                     currentUser = documentSnapshot.toObject(User.class);
                     if (currentUser != null) {
                         currentUser.setId(documentSnapshot.getId());
-                        if ("employer".equalsIgnoreCase(role)) {
-                            layoutLoggedIn.setVisibility(View.GONE);
-                            layoutEmployerDashboard.setVisibility(View.VISIBLE);
-                            tvEmployerWelcome.setText("Chào, " + currentUser.getFullName() + "!");
-                        } else {
-                            layoutLoggedIn.setVisibility(View.VISIBLE);
-                            layoutEmployerDashboard.setVisibility(View.GONE);
-                            displayCandidateData();
-                        }
+                        displayCandidateData();
                     }
                 }
             });
@@ -287,11 +274,6 @@ public class ProfileFragment extends BaseFragment {
         getView().findViewById(R.id.btnEditProfile).setOnClickListener(v -> startActivity(new Intent(getActivity(), EditProfileActivity.class)));
         getView().findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
         getView().findViewById(R.id.ivAddSkill).setOnClickListener(v -> showSkillDialog());
-
-        getView().findViewById(R.id.cardPostJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), PostJobActivity.class)));
-        getView().findViewById(R.id.cardManageJob).setOnClickListener(v -> startActivity(new Intent(getActivity(), ManageJobsActivity.class)));
-        getView().findViewById(R.id.cardApplicants).setOnClickListener(v -> startActivity(new Intent(getActivity(), ViewApplicantsActivity.class)));
-        getView().findViewById(R.id.btnLogoutEmployer).setOnClickListener(v -> logout());
 
         View cardSavedJobs = getView().findViewById(R.id.cardSavedJobs);
         if (cardSavedJobs != null) {

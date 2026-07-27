@@ -24,6 +24,7 @@ public class Application implements Serializable {
     private String candidateName;
     private String companyName;
     private String location;
+    private String candidateAvatarUrl;
 
     public Application() {
         this.id = java.util.UUID.randomUUID().toString();
@@ -75,4 +76,7 @@ public class Application implements Serializable {
     public void setCompanyName(String companyName) { this.companyName = companyName; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getCandidateAvatarUrl() { return candidateAvatarUrl; }
+    public void setCandidateAvatarUrl(String candidateAvatarUrl) { this.candidateAvatarUrl = candidateAvatarUrl; }
 }

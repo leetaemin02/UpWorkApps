@@ -13,6 +13,7 @@ import com.example.jobsearchapp.ui.candidate.fragments.AppliedJobsFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.HomeFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.ProfileFragment;
 import com.example.jobsearchapp.ui.candidate.fragments.SearchFragment;
+import com.example.jobsearchapp.ui.employer.fragments.EmployerAppsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -50,12 +51,8 @@ public class MainActivity extends BaseActivity {
         }
         profileItem.setIcon(R.drawable.ic_profile_custom); // Sử dụng icon người mới bạn đã gửi
 
-        // Ẩn tab Apps nếu là Nhà tuyển dụng (Employer)
-        if ("employer".equalsIgnoreCase(role)) {
-            bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(false);
-        } else {
-            bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(true);
-        }
+        // Đảm bảo tab Apps luôn hiện
+        bottomNavigation.getMenu().findItem(R.id.nav_apps).setVisible(true);
 
         bottomNavigation.getMenu().findItem(R.id.nav_search).setVisible(true);
 
@@ -166,7 +163,12 @@ public class MainActivity extends BaseActivity {
                 replaceFragment(new SearchFragment());
                 return true;
             } else if (itemId == R.id.nav_apps) {
-                replaceFragment(new AppliedJobsFragment());
+                com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);
+                if ("employer".equalsIgnoreCase(sessionManager.getRole())) {
+                    replaceFragment(new EmployerAppsFragment());
+                } else {
+                    replaceFragment(new AppliedJobsFragment());
+                }
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 com.example.jobsearchapp.utils.SessionManager sessionManager = new com.example.jobsearchapp.utils.SessionManager(this);

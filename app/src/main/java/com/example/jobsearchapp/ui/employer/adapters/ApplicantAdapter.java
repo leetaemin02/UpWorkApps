@@ -4,9 +4,11 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Applicant;
 import java.util.List;
@@ -39,6 +41,16 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
         Applicant applicant = applicantList.get(position);
         holder.tvName.setText(applicant.getName());
         holder.tvAppliedJob.setText("Vị trí: " + applicant.getJobTitle());
+
+        if (applicant.getAvatarUrl() != null && !applicant.getAvatarUrl().isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                .load(applicant.getAvatarUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_avatar)
+                .into(holder.ivAvatar);
+        } else {
+            holder.ivAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
 
         String status = applicant.getStatus();
         holder.tvStatus.setText("Trạng thái: " + translateStatus(status));
@@ -82,6 +94,7 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
 
     static class ApplicantViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvAppliedJob, tvStatus;
+        ImageView ivAvatar;
         View btnAccept, btnReject, layoutActions;
 
         public ApplicantViewHolder(@NonNull View itemView) {
@@ -89,6 +102,7 @@ public class ApplicantAdapter extends RecyclerView.Adapter<ApplicantAdapter.Appl
             tvName = itemView.findViewById(R.id.tvApplicantName);
             tvAppliedJob = itemView.findViewById(R.id.tvAppliedJob);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            ivAvatar = itemView.findViewById(R.id.ivAvatar);
             btnAccept = itemView.findViewById(R.id.btnAccept);
             btnReject = itemView.findViewById(R.id.btnReject);
             layoutActions = itemView.findViewById(R.id.layoutActions);

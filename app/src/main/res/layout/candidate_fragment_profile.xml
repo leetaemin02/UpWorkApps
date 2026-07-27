@@ -41,7 +41,7 @@
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- GIAO DIỆN NHÀ TUYỂN DỤNG (Hiển thị khi role = EMPLOYER) -->
+        <!-- GIAO DIỆN NHÀ TUYỂN DỤNG (ĐÃ CHUYỂN SANG TAB APPS) -->
         <LinearLayout
             android:id="@+id/layout_employer_dashboard"
             android:layout_width="match_parent"
@@ -49,111 +49,7 @@
             android:orientation="vertical"
             android:padding="16dp"
             android:visibility="gone">
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/primary"
-                android:layout_marginBottom="24dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <TextView
-                        android:id="@+id/tvEmployerWelcome"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Chào mừng Nhà tuyển dụng!"
-                        android:textColor="@color/white"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quản lý tin tuyển dụng và ứng viên của bạn tại đây."
-                        android:textColor="@color/white"
-                        android:alpha="0.85"
-                        android:layout_marginTop="8dp"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardPostJob"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-                    <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_menu_add" app:tint="@color/primary" android:background="@drawable/bg_tag" android:padding="8dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Đăng tin tuyển dụng" android:layout_marginStart="16dp" android:textStyle="bold" android:textColor="@color/text_main"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardManageJob"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-                    <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_menu_edit" app:tint="@color/primary" android:background="@drawable/bg_tag" android:padding="8dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quản lý tin tuyển dụng" android:layout_marginStart="16dp" android:textStyle="bold" android:textColor="@color/text_main"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardApplicants"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-                    <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@android:drawable/ic_menu_myplaces" app:tint="@color/primary" android:background="@drawable/bg_tag" android:padding="8dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Xem danh sách ứng viên" android:layout_marginStart="16dp" android:textStyle="bold" android:textColor="@color/text_main"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogoutEmployer"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Đăng xuất"
-                android:textColor="@color/error"
-                app:icon="@android:drawable/ic_lock_power_off"
-                app:iconTint="@color/error" />
-
+            <!-- Phần này có thể xóa hoàn toàn hoặc để trống -->
         </LinearLayout>
 
         <!-- GIAO DIỆN ỨNG VIÊN (Hiển thị khi role = CANDIDATE) -->

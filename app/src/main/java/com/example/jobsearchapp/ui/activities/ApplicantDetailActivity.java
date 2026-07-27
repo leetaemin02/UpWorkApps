@@ -124,9 +124,17 @@ public class ApplicantDetailActivity extends BaseActivity {
         } else {
             layoutActions.setVisibility(View.GONE);
             tvProcessedStatus.setVisibility(View.VISIBLE);
-            String statusText = "Hồ sơ này đã được xử lý: " + 
-                ("Accepted".equalsIgnoreCase(status) ? "Phỏng vấn" : "Từ chối");
+            
+            String statusVN = "Accepted".equalsIgnoreCase(status) ? "Phỏng vấn" : "Từ chối";
+            String statusText = "Hồ sơ này đã được xử lý: " + statusVN;
             tvProcessedStatus.setText(statusText);
+            
+            // Đổi màu tùy theo trạng thái
+            if ("Accepted".equalsIgnoreCase(status)) {
+                tvProcessedStatus.setTextColor(android.graphics.Color.parseColor("#198754"));
+            } else {
+                tvProcessedStatus.setTextColor(android.graphics.Color.parseColor("#DC3545"));
+            }
         }
     }
 
