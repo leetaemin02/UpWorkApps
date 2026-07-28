@@ -10,6 +10,7 @@ import com.example.jobsearchapp.data.models.Job;
 import com.example.jobsearchapp.data.models.Application;
 import com.example.jobsearchapp.data.models.Notification;
 import com.example.jobsearchapp.data.models.SavedJob;
+import com.example.jobsearchapp.data.models.User;
 import com.example.jobsearchapp.ui.base.BaseActivity;
 import com.example.jobsearchapp.utils.FormatUtils;
 import com.example.jobsearchapp.utils.SessionManager;
@@ -119,6 +120,9 @@ public class JobDetailActivity extends BaseActivity {
     private void displayJobInfo() {
         if (job == null) return;
 
+        // Tải thông tin công ty mới nhất từ bảng users
+        loadLatestCompanyInfo();
+
         if (tvTitle != null) tvTitle.setText(job.getTitle());
         if (tvSalary != null) tvSalary.setText(FormatUtils.formatSalaryRange(job.getSalaryMin(), job.getSalaryMax()));
         if (tvLocation != null) tvLocation.setText(job.getLocation());
@@ -141,6 +145,33 @@ public class JobDetailActivity extends BaseActivity {
                 if (tvDetailBenefitsHeader != null) tvDetailBenefitsHeader.setVisibility(View.GONE);
             }
         }
+    }
+
+    private void loadLatestCompanyInfo() {
+        if (job.getEmployerId() == null || job.getEmployerId().isEmpty()) {
+            if (tvDetailCompany != null) tvDetailCompany.setText(job.getCompanyName());
+            return;
+        }
+
+        db.collection("users").document(job.getEmployerId()).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    String latestName = documentSnapshot.getString("fullName");
+                    String latestLogo = documentSnapshot.getString("avatarUrl");
+
+                    if (tvDetailCompany != null && latestName != null && !latestName.isEmpty()) {
+                        tvDetailCompany.setText(latestName);
+                    }
+                    
+                    if (ivDetailLogo != null && latestLogo != null && !latestLogo.isEmpty()) {
+                        com.bumptech.glide.Glide.with(this)
+                            .load(latestLogo)
+                            .circleCrop()
+                            .placeholder(R.drawable.ic_default_avatar)
+                            .into(ivDetailLogo);
+                    }
+                }
+            });
     }
 
     private void setupApplicationRealtimeUpdate() {

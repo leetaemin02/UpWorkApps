@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.jobsearchapp.R;
 import com.example.jobsearchapp.data.models.Job;
 import com.example.jobsearchapp.data.models.SavedJob;
@@ -97,7 +98,32 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
 
         holder.tvLocation.setText(job.getLocation());
 
+        // Mặc định nạp dữ liệu từ đối tượng job
         holder.tvCompanyName.setText(job.getCompanyName());
+        holder.ivCompanyLogo.setImageResource(R.drawable.ic_default_avatar);
+
+        // Tải thông tin công ty mới nhất từ bảng users
+        if (job.getEmployerId() != null && !job.getEmployerId().isEmpty()) {
+            db.collection("users").document(job.getEmployerId()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String latestName = documentSnapshot.getString("fullName");
+                        String latestLogo = documentSnapshot.getString("avatarUrl");
+
+                        if (latestName != null && !latestName.isEmpty()) {
+                            holder.tvCompanyName.setText(latestName);
+                        }
+                        
+                        if (latestLogo != null && !latestLogo.isEmpty()) {
+                            Glide.with(holder.itemView.getContext())
+                                .load(latestLogo)
+                                .circleCrop()
+                                .placeholder(R.drawable.ic_default_avatar)
+                                .into(holder.ivCompanyLogo);
+                        }
+                    }
+                });
+        }
 
         if (holder.tvCategory != null) {
             holder.tvCategory.setText(job.getCategory() != null ? job.getCategory() : "Khác");
@@ -217,7 +243,7 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
         TextView tvCompanyName;
         TextView tvCategory;
         TextView tvExp;
-        ImageView ivBookmark;
+        ImageView ivBookmark, ivCompanyLogo;
 
         public JobViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -229,6 +255,7 @@ public class JobAdapter extends RecyclerView.Adapter<JobAdapter.JobViewHolder> {
             tvCategory = itemView.findViewById(R.id.tvJobCategory);
             tvExp = itemView.findViewById(R.id.tvJobExp);
             ivBookmark = itemView.findViewById(R.id.ivBookmark);
+            ivCompanyLogo = itemView.findViewById(R.id.ivCompanyLogo);
         }
     }
 }
