@@ -31,8 +31,9 @@ import java.util.Map;
 
 public class ProfileFragment extends BaseFragment {
     private TextView tvName, tvEmail, tvLocation, tvCvName, tvEditAvatar;
-    private LinearLayout layoutLoggedIn, layoutGuest, layoutCvItem;
-    private android.widget.ImageView ivProfileAvatar;
+    private TextView tvEmployerCompanyName, tvEmployerEmail, tvEmployerPhone, tvEmployerDescription, tvEmployerAddress, tvEditEmployerAvatar;
+    private LinearLayout layoutLoggedIn, layoutGuest, layoutCvItem, layoutEmployerProfile;
+    private android.widget.ImageView ivProfileAvatar, ivEmployerAvatar;
     private ChipGroup cgProfileSkills;
     private SessionManager sessionManager;
     private User currentUser;
@@ -53,18 +54,28 @@ public class ProfileFragment extends BaseFragment {
 
     @Override
     protected void initViews(View view) {
+        // Candidate views
         tvName = view.findViewById(R.id.tvProfileName);
         tvEmail = view.findViewById(R.id.tvProfileEmail);
         tvLocation = view.findViewById(R.id.tvProfileLocation);
         tvCvName = view.findViewById(R.id.tvCvName);
         tvEditAvatar = view.findViewById(R.id.tvEditAvatar);
-
         layoutCvItem = view.findViewById(R.id.layout_cv_item);
         ivProfileAvatar = view.findViewById(R.id.ivProfileAvatar);
-
         layoutLoggedIn = view.findViewById(R.id.layout_logged_in);
-        layoutGuest = view.findViewById(R.id.layout_guest);
         cgProfileSkills = view.findViewById(R.id.cgProfileSkills);
+
+        // Employer views
+        layoutEmployerProfile = view.findViewById(R.id.layout_employer_profile);
+        ivEmployerAvatar = view.findViewById(R.id.ivEmployerAvatar);
+        tvEmployerCompanyName = view.findViewById(R.id.tvEmployerCompanyName);
+        tvEditEmployerAvatar = view.findViewById(R.id.tvEditEmployerAvatar);
+        tvEmployerEmail = view.findViewById(R.id.tvEmployerEmail);
+        tvEmployerPhone = view.findViewById(R.id.tvEmployerPhone);
+        tvEmployerDescription = view.findViewById(R.id.tvEmployerDescription);
+        tvEmployerAddress = view.findViewById(R.id.tvEmployerAddress);
+
+        layoutGuest = view.findViewById(R.id.layout_guest);
 
         db = FirebaseFirestore.getInstance();
         sessionManager = new SessionManager(getContext());
@@ -83,9 +94,16 @@ public class ProfileFragment extends BaseFragment {
         if (userId.isEmpty()) {
             layoutGuest.setVisibility(View.VISIBLE);
             layoutLoggedIn.setVisibility(View.GONE);
+            layoutEmployerProfile.setVisibility(View.GONE);
         } else {
             layoutGuest.setVisibility(View.GONE);
-            layoutLoggedIn.setVisibility(View.VISIBLE);
+            if ("employer".equalsIgnoreCase(role)) {
+                layoutLoggedIn.setVisibility(View.GONE);
+                layoutEmployerProfile.setVisibility(View.VISIBLE);
+            } else {
+                layoutLoggedIn.setVisibility(View.VISIBLE);
+                layoutEmployerProfile.setVisibility(View.GONE);
+            }
             loadUserData(userId, role);
         }
     }
@@ -97,10 +115,32 @@ public class ProfileFragment extends BaseFragment {
                     currentUser = documentSnapshot.toObject(User.class);
                     if (currentUser != null) {
                         currentUser.setId(documentSnapshot.getId());
-                        displayCandidateData();
+                        if ("employer".equalsIgnoreCase(role)) {
+                            displayEmployerData();
+                        } else {
+                            displayCandidateData();
+                        }
                     }
                 }
             });
+    }
+
+    private void displayEmployerData() {
+        tvEmployerCompanyName.setText(currentUser.getFullName() != null ? currentUser.getFullName() : "Tên Công Ty");
+        tvEmployerEmail.setText(currentUser.getEmail());
+        tvEmployerPhone.setText("Số điện thoại: " + (currentUser.getPhone() != null ? currentUser.getPhone() : "Chưa cập nhật"));
+        tvEmployerDescription.setText(currentUser.getCompanyDescription() != null ? currentUser.getCompanyDescription() : "Chưa có mô tả công ty");
+        tvEmployerAddress.setText(currentUser.getLocation() != null ? currentUser.getLocation() : "Chưa cập nhật địa chỉ");
+
+        if (currentUser.getAvatarUrl() != null && !currentUser.getAvatarUrl().isEmpty()) {
+            com.bumptech.glide.Glide.with(this)
+                .load(currentUser.getAvatarUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_default_avatar)
+                .into(ivEmployerAvatar);
+        } else {
+            ivEmployerAvatar.setImageResource(R.drawable.ic_default_avatar);
+        }
     }
 
     private void displayCandidateData() {
@@ -274,6 +314,17 @@ public class ProfileFragment extends BaseFragment {
         getView().findViewById(R.id.btnEditProfile).setOnClickListener(v -> startActivity(new Intent(getActivity(), EditProfileActivity.class)));
         getView().findViewById(R.id.btnLogout).setOnClickListener(v -> logout());
         getView().findViewById(R.id.ivAddSkill).setOnClickListener(v -> showSkillDialog());
+
+        // Employer listeners
+        if (ivEmployerAvatar != null) {
+            ivEmployerAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
+        if (tvEditEmployerAvatar != null) {
+            tvEditEmployerAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        }
+        getView().findViewById(R.id.btnEditEmployerProfile).setOnClickListener(v -> 
+                startActivity(new Intent(getActivity(), EditProfileActivity.class)));
+        getView().findViewById(R.id.btnLogoutEmployer).setOnClickListener(v -> logout());
 
         View cardSavedJobs = getView().findViewById(R.id.cardSavedJobs);
         if (cardSavedJobs != null) {

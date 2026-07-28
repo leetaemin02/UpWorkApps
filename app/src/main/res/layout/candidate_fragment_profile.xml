@@ -41,15 +41,188 @@
                 app:cornerRadius="8dp" />
         </LinearLayout>
 
-        <!-- GIAO DIỆN NHÀ TUYỂN DỤNG (ĐÃ CHUYỂN SANG TAB APPS) -->
+        <!-- GIAO DIỆN NHÀ TUYỂN DỤNG (PROFILE) -->
         <LinearLayout
-            android:id="@+id/layout_employer_dashboard"
+            android:id="@+id/layout_employer_profile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp"
             android:visibility="gone">
-            <!-- Phần này có thể xóa hoàn toàn hoặc để trống -->
+
+            <!-- Employer Header Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivEmployerAvatar"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:src="@drawable/ic_default_avatar"
+                        android:scaleType="centerCrop"
+                        android:background="@color/gray_light"
+                        app:shapeAppearanceOverlay="@style/CircleImage"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/tvEmployerCompanyName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tên Công Ty"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_main"
+                        android:layout_marginTop="16dp" />
+
+                    <TextView
+                        android:id="@+id/tvEditEmployerAvatar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Đổi Logo công ty"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="4dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Contact Info -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thông tin liên hệ"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvEmployerEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Email công ty"
+                        android:drawableStart="@android:drawable/ic_dialog_email"
+                        android:drawablePadding="12dp"
+                        android:gravity="center_vertical"/>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/gray_border" android:layout_marginVertical="12dp"/>
+
+                    <TextView
+                        android:id="@+id/tvEmployerPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Số điện thoại công ty"
+                        android:drawableStart="@android:drawable/ic_menu_call"
+                        android:drawablePadding="12dp"
+                        android:gravity="center_vertical"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Company Intro -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giới thiệu chung"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:id="@+id/tvEmployerDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="Mô tả về công ty của bạn..."
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_main"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Address -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Địa chỉ công ty"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:id="@+id/tvEmployerAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text="Địa chỉ trụ sở chính"
+                    android:drawableStart="@android:drawable/ic_menu_mylocation"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/text_main"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEditEmployerProfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chỉnh sửa thông tin công ty"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_marginTop="32dp"
+                app:cornerRadius="12dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogoutEmployer"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Đăng xuất"
+                android:textColor="@color/error"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:gravity="start"
+                app:icon="@android:drawable/ic_lock_power_off"
+                app:iconTint="@color/error" />
         </LinearLayout>
 
         <!-- GIAO DIỆN ỨNG VIÊN (Hiển thị khi role = CANDIDATE) -->

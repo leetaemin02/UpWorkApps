@@ -43,7 +43,9 @@ public class EmployerAppsFragment extends BaseFragment {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (isAdded() && documentSnapshot.exists()) {
                         String fullName = documentSnapshot.getString("fullName");
-                        tvWelcomeName.setText("Chào, " + fullName + "!");
+                        String companyName = documentSnapshot.getString("companyName");
+                        String displayName = (companyName != null && !companyName.isEmpty()) ? companyName : fullName;
+                        tvWelcomeName.setText("Chào, " + displayName + "!");
                     }
                 });
         }

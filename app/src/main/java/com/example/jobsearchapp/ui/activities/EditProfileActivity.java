@@ -24,6 +24,7 @@ import java.util.Map;
 public class EditProfileActivity extends BaseActivity {
     private EditText edtFullName, edtPhone, edtCompany, edtProfession, edtLocation;
     private EditText edtWebsite, edtCompanyDesc, edtLogo;
+    private TextView tvTitle;
     private android.widget.LinearLayout layoutEmployerFields;
     private ImageView ivAvatar;
     private TextView tvEditAvatar;
@@ -41,6 +42,7 @@ public class EditProfileActivity extends BaseActivity {
 
     @Override
     protected void initViews() {
+        tvTitle = findViewById(R.id.tvEditProfileTitle);
         edtFullName = findViewById(R.id.edtEditFullName);
         edtPhone = findViewById(R.id.edtEditPhone);
         edtCompany = findViewById(R.id.edtEditCompany);
@@ -59,7 +61,34 @@ public class EditProfileActivity extends BaseActivity {
         userId = sessionManager.getUserId();
         
         if ("employer".equalsIgnoreCase(sessionManager.getRole())) {
+            if (tvTitle != null) tvTitle.setText("Chỉnh sửa thông tin công ty");
+            if (tvEditAvatar != null) tvEditAvatar.setText("Đổi logo công ty");
+            
             layoutEmployerFields.setVisibility(android.view.View.VISIBLE);
+            
+            // Ẩn các trường dư thừa cho Nhà tuyển dụng
+            if (edtProfession != null) edtProfession.setVisibility(View.GONE);
+            View tvLabelProfession = findViewById(R.id.tvLabelProfession);
+            if (tvLabelProfession != null) tvLabelProfession.setVisibility(View.GONE);
+
+            if (edtCompany != null) edtCompany.setVisibility(View.GONE);
+            View tvLabelCompany = findViewById(R.id.tvLabelCompany);
+            if (tvLabelCompany != null) tvLabelCompany.setVisibility(View.GONE);
+
+            if (edtLogo != null) edtLogo.setVisibility(View.GONE);
+            View tvLabelLogo = findViewById(R.id.tvLabelLogo);
+            if (tvLabelLogo != null) tvLabelLogo.setVisibility(View.GONE);
+
+            if (edtWebsite != null) edtWebsite.setVisibility(View.GONE);
+            View tvLabelWebsite = findViewById(R.id.tvLabelWebsite);
+            if (tvLabelWebsite != null) tvLabelWebsite.setVisibility(View.GONE);
+            
+            // Cập nhật nhãn "Họ và tên" thành "Tên công ty"
+            View tvLabelFullName = findViewById(R.id.tvLabelFullName);
+            if (tvLabelFullName instanceof TextView) {
+                ((TextView) tvLabelFullName).setText("Tên công ty");
+            }
+            edtFullName.setHint("Nhập tên công ty");
         }
 
         loadUserData();
@@ -150,14 +179,15 @@ public class EditProfileActivity extends BaseActivity {
                 Map<String, Object> updates = new HashMap<>();
                 updates.put("fullName", fullName);
                 updates.put("phone", phone);
-                updates.put("companyName", company);
-                updates.put("profession", profession);
                 updates.put("location", location);
                 
                 if (layoutEmployerFields.getVisibility() == android.view.View.VISIBLE) {
-                    updates.put("companyWebsite", edtWebsite.getText().toString().trim());
+                    updates.put("companyName", fullName); // Đồng bộ companyName với fullName cho NTD
                     updates.put("companyDescription", edtCompanyDesc.getText().toString().trim());
-                    updates.put("avatarUrl", edtLogo.getText().toString().trim());
+                    // Ẩn Website/Logo URL text field theo yêu cầu tinh gọn
+                } else {
+                    updates.put("profession", profession);
+                    updates.put("companyName", company);
                 }
                 
                 db.collection("users").document(userId)
