@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="12dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/primary_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvAiScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="95% Match"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:background="@drawable/bg_status_badge"
+            android:backgroundTint="@color/success"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp" />
+
+        <TextView
+            android:id="@+id/tvJobTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Senior Java Developer"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_main"
+            android:layout_marginTop="8dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tvCompanyName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tech Corp"
+            android:textSize="13sp"
+            android:textColor="@color/text_sub"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tvAiReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Phù hợp với kỹ năng Java, Spring Boot và SQL của bạn."
+            android:textSize="12sp"
+            android:textColor="@color/primary"
+            android:layout_marginTop="8dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:fontStyle="italic" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

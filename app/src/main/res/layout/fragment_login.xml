@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@android:drawable/ic_menu_today"
+            app:tint="@color/primary"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chào mừng trở lại"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_main"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đăng nhập để tiếp tục hành trình của bạn"
+            android:textSize="14sp"
+            android:textColor="@color/text_sub"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Email -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textColor="@color/text_main"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"/>
+        <EditText
+            android:id="@+id/edtEmailLogin"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="example@gmail.com"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/bg_search_bar"
+            android:paddingHorizontal="16dp"
+            android:drawableStart="@android:drawable/ic_dialog_email"
+            android:drawablePadding="12dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Mật khẩu -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mật khẩu"
+            android:textColor="@color/text_main"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"/>
+        <EditText
+            android:id="@+id/edtPasswordLogin"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="••••••••"
+            android:inputType="textPassword"
+            android:background="@drawable/bg_search_bar"
+            android:paddingHorizontal="16dp"
+            android:drawableStart="@android:drawable/ic_lock_idle_lock"
+            android:drawablePadding="12dp"
+            android:layout_marginBottom="32dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Đăng nhập"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:id="@+id/tvToRegister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chưa có tài khoản? Đăng ký ngay"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBackToGuest"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiếp tục với tư cách Khách"
+            android:textAllCaps="false"
+            android:textColor="@color/text_sub"
+            app:icon="@android:drawable/ic_menu_revert"
+            app:iconTint="@color/text_sub"
+            android:layout_marginBottom="40dp"/>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

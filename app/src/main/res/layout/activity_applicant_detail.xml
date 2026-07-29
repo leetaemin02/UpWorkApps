@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_gray"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+            <ImageView
+                android:id="@+id/ivBack"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_revert"
+                app:tint="@color/text_main" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Chi tiết ứng viên"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_main" />
+        </RelativeLayout>
+
+        <!-- Profile Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:gravity="center">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/ivApplicantAvatar"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@android:drawable/sym_def_app_icon"
+                    android:scaleType="centerCrop"
+                    android:background="@color/gray_light"
+                    app:shapeAppearanceOverlay="@style/CircleImage" />
+
+                <TextView
+                    android:id="@+id/tvApplicantName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nguyễn Văn A"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_main"
+                    android:layout_marginTop="16dp" />
+
+                <TextView
+                    android:id="@+id/tvAppliedJobTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ứng tuyển: Java Android Developer"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- AI Evaluation -->
+        <TextView
+            android:id="@+id/tvAiEvaluationLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI Đánh giá độ phù hợp ✨"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvAiEvaluation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#4CAF50"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/tvAiDetailScore"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="90%"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#4CAF50"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=" Độ tương thích"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_sub"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvAiDetailReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Lý do: ..."
+                    android:layout_marginTop="8dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_main"
+                    android:lineSpacingExtra="4dp"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Contact Info -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thông tin liên hệ"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvApplicantEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Email: example@gmail.com"
+                    android:drawableStart="@android:drawable/ic_dialog_email"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"/>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/gray_border" android:layout_marginVertical="12dp"/>
+
+                <TextView
+                    android:id="@+id/tvApplicantPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Số điện thoại: 0123 456 789"
+                    android:drawableStart="@android:drawable/ic_menu_call"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Skills -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kỹ năng chuyên môn"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp"/>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cgApplicantSkills"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:chipSpacingHorizontal="8dp" />
+
+        <!-- CV Action -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewCv"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Xem CV đã nộp (PDF)"
+            android:layout_marginTop="32dp"
+            app:icon="@drawable/ic_pdf_red"
+            app:cornerRadius="12dp" />
+
+        <!-- Job Detail Action -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewAppliedJob"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Xem chi tiết công việc"
+            android:layout_marginTop="12dp"
+            app:icon="@android:drawable/ic_menu_info_details"
+            app:cornerRadius="12dp" />
+
+        <!-- Accept/Reject Actions -->
+        <LinearLayout
+            android:id="@+id/layoutDetailActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDetailReject"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Từ chối"
+                android:textColor="@color/error"
+                app:cornerRadius="12dp"
+                android:layout_marginEnd="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDetailAccept"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Chấp nhận"
+                android:backgroundTint="@color/success"
+                app:cornerRadius="12dp"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvDetailProcessedStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hồ sơ này đã được xử lý"
+            android:textStyle="bold|italic"
+            android:textColor="@color/text_sub"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <!-- Top Bar -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp">
+        <ImageView
+            android:id="@+id/ivBackEdit"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_revert"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tvEditProfileTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chỉnh sửa hồ sơ"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Avatar Edit Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivEditProfileAvatar"
+                        android:layout_width="90dp"
+                        android:layout_height="90dp"
+                        android:src="@drawable/ic_default_avatar"
+                        android:scaleType="centerCrop"
+                        android:background="@color/gray_light"
+                        app:shapeAppearanceOverlay="@style/CircleImage"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <TextView
+                        android:id="@+id/tvEditAvatarLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thay đổi ảnh đại diện"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+            <TextView
+                android:id="@+id/tvLabelFullName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Họ và tên"
+                android:textColor="@color/text_sub"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/edtEditFullName"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_search_bar"
+                android:paddingHorizontal="16dp"
+                android:inputType="text"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tvLabelProfession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chức danh (Ví dụ: Mobile Developer)"
+                android:textColor="@color/text_sub"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/edtEditProfession"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_search_bar"
+                android:paddingHorizontal="16dp"
+                android:inputType="text"
+                android:layout_marginBottom="16dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Địa điểm" android:textColor="@color/text_sub" android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/edtEditLocation"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_search_bar"
+                android:paddingHorizontal="16dp"
+                android:inputType="text"
+                android:layout_marginBottom="16dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Số điện thoại" android:textColor="@color/text_sub" android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/edtEditPhone"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_search_bar"
+                android:paddingHorizontal="16dp"
+                android:inputType="phone"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tvLabelCompany"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tên công ty (nếu có)"
+                android:textColor="@color/text_sub"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/edtEditCompany"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_search_bar"
+                android:paddingHorizontal="16dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Phần dành riêng cho Nhà tuyển dụng -->
+            <LinearLayout
+                android:id="@+id/layoutEmployerFields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvLabelWebsite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Website công ty"
+                    android:textColor="@color/text_sub"
+                    android:layout_marginBottom="8dp" />
+                <EditText
+                    android:id="@+id/edtEditWebsite"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_search_bar"
+                    android:paddingHorizontal="16dp"
+                    android:inputType="textUri"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mô tả ngắn về công ty" android:textColor="@color/text_sub" android:layout_marginBottom="8dp" />
+                <EditText
+                    android:id="@+id/edtEditCompanyDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="3"
+                    android:background="@drawable/bg_search_bar"
+                    android:padding="16dp"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:id="@+id/tvLabelLogo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Logo URL (Tạm thời)"
+                    android:textColor="@color/text_sub"
+                    android:layout_marginBottom="8dp" />
+                <EditText
+                    android:id="@+id/edtEditLogo"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_search_bar"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginBottom="16dp" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveProfile"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Lưu thay đổi"
+                android:layout_marginTop="20dp"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

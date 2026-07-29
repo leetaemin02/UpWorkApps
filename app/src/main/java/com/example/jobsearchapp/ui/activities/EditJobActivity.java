@@ -1,0 +1,147 @@
+package com.example.jobsearchapp.ui.activities;
+
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import com.example.jobsearchapp.R;
+import com.example.jobsearchapp.data.models.Job;
+import com.example.jobsearchapp.data.models.Notification;
+import com.example.jobsearchapp.ui.base.BaseActivity;
+import com.example.jobsearchapp.utils.SessionManager;
+import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.HashMap;
+import java.util.Map;
+
+public class EditJobActivity extends BaseActivity {
+
+    private EditText edtJobName, edtSalaryMin, edtSalaryMax, edtLocation, edtDescription, edtRequirements, edtBenefits, edtJobType, edtCategory, edtDeadline, edtQuantity;
+    private com.google.android.material.switchmaterial.SwitchMaterial swJobStatus;
+    private Button btnUpdate;
+    private ImageView ivBack;
+    private FirebaseFirestore db;
+    private SessionManager sessionManager;
+    private Job currentJob;
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.employer_activity_edit_job;
+    }
+
+    @Override
+    protected void initViews() {
+        edtJobName = findViewById(R.id.edtJobName);
+        edtSalaryMin = findViewById(R.id.edtSalaryMin);
+        edtSalaryMax = findViewById(R.id.edtSalaryMax);
+        edtLocation = findViewById(R.id.edtLocation);
+        edtDescription = findViewById(R.id.edtDescription);
+        edtRequirements = findViewById(R.id.edtRequirements);
+        edtBenefits = findViewById(R.id.edtBenefits);
+        edtJobType = findViewById(R.id.edtJobType);
+        edtCategory = findViewById(R.id.edtCategory);
+        edtDeadline = findViewById(R.id.edtDeadline);
+        edtQuantity = findViewById(R.id.edtQuantity);
+        swJobStatus = findViewById(R.id.swJobStatus);
+        btnUpdate = findViewById(R.id.btnUpdate);
+        ivBack = findViewById(R.id.ivBack);
+
+        db = FirebaseFirestore.getInstance();
+        sessionManager = new SessionManager(this);
+        
+        currentJob = (Job) getIntent().getSerializableExtra("JOB_DATA");
+        if (currentJob != null) {
+            displayJobData();
+        }
+    }
+
+    private void displayJobData() {
+        edtJobName.setText(currentJob.getTitle());
+        edtSalaryMin.setText(String.valueOf(currentJob.getSalaryMin()));
+        edtSalaryMax.setText(String.valueOf(currentJob.getSalaryMax()));
+        edtLocation.setText(currentJob.getLocation());
+        edtDescription.setText(currentJob.getDescription());
+        edtRequirements.setText(currentJob.getRequirements());
+        edtBenefits.setText(currentJob.getBenefits());
+        edtJobType.setText(currentJob.getJobType());
+        edtCategory.setText(currentJob.getCategory());
+        edtQuantity.setText(String.valueOf(currentJob.getQuantity()));
+        swJobStatus.setChecked("active".equalsIgnoreCase(currentJob.getStatus()));
+        swJobStatus.setText("Trạng thái: " + (swJobStatus.isChecked() ? "Active" : "Closed"));
+
+        swJobStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            swJobStatus.setText("Trạng thái: " + (isChecked ? "Active" : "Closed"));
+        });
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+        edtDeadline.setText(sdf.format(new java.util.Date(currentJob.getDeadline())));
+    }
+
+    @Override
+    protected void initListeners() {
+        ivBack.setOnClickListener(v -> finish());
+
+        btnUpdate.setOnClickListener(v -> {
+            if (currentJob == null) return;
+
+            String title = edtJobName.getText().toString().trim();
+            String sMin = edtSalaryMin.getText().toString().trim();
+            String sMax = edtSalaryMax.getText().toString().trim();
+            String loc = edtLocation.getText().toString().trim();
+            String qtyStr = edtQuantity.getText().toString().trim();
+            
+            if (title.isEmpty() || sMin.isEmpty() || sMax.isEmpty() || loc.isEmpty() || qtyStr.isEmpty()) {
+                showToast("Vui lòng điền đủ thông tin cơ bản");
+                return;
+            }
+
+            int newQty = Integer.parseInt(qtyStr);
+            String newStatus = swJobStatus.isChecked() ? "active" : "closed";
+
+            // Logic tự động: Nếu tăng số lượng > 0 mà đang closed, tự động mở lại
+            if (newQty > 0 && "closed".equalsIgnoreCase(currentJob.getStatus()) && swJobStatus.isChecked()) {
+                newStatus = "active";
+            } else if (newQty <= 0) {
+                newStatus = "closed";
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("title", title);
+            updates.put("salaryMin", Long.parseLong(sMin));
+            updates.put("salaryMax", Long.parseLong(sMax));
+            updates.put("location", loc);
+            updates.put("description", edtDescription.getText().toString().trim());
+            updates.put("requirements", edtRequirements.getText().toString().trim());
+            updates.put("benefits", edtBenefits.getText().toString().trim());
+            updates.put("jobType", edtJobType.getText().toString().trim());
+            updates.put("category", edtCategory.getText().toString().trim());
+            updates.put("quantity", newQty);
+            updates.put("status", newStatus);
+
+            String deadlineStr = edtDeadline.getText().toString().trim();
+            long deadline = currentJob.getDeadline();
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault());
+                deadline = sdf.parse(deadlineStr).getTime();
+            } catch (Exception e) {}
+            updates.put("deadline", deadline);
+
+            db.collection("jobs").document(currentJob.getId())
+                .update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    // Thông báo cho nhà tuyển dụng
+                    Notification notif = new Notification(
+                            sessionManager.getUserId(),
+                            "Cập nhật tin thành công",
+                            "Bạn đã cập nhật tin tuyển dụng vị trí " + title + " thành công",
+                            "system",
+                            currentJob.getId(),
+                            null
+                    );
+                    db.collection("notifications").add(notif);
+
+                    showToast("Cập nhật tin thành công");
+                    finish();
+                })
+                .addOnFailureListener(e -> showToast("Lỗi: " + e.getMessage()));
+        });
+    }
+}
